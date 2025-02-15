@@ -1,25 +1,44 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { supabase } from "@/lib/supabase";
 
 export default function PaymentForm() {
   const [amount, setAmount] = useState<string>("");
   const [processing, setProcessing] = useState(false);
+  const [user, setUser] = useState<any>(null);
+
+  useEffect(() => {
+    const getUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      setUser(user);
+    };
+    getUser();
+  }, []);
 
   const handlePayment = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!amount || !user) return;
+
     setProcessing(true);
 
     try {
-      // Placeholder for smart contract interaction
-      console.log(`Processing payment of $${amount}`);
-      alert(
-        `Payment of $${amount} would trigger smart contract (not implemented)`
-      );
+      // Mock successful payment with delay
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      // Save donation record to Supabase (optional)
+      await supabase.from('donations').insert({
+        user_id: user.id,
+        amount: Number(amount),
+        tokens: Number(amount) * 100,
+        created_at: new Date().toISOString()
+      });
+      
+      // Direct navigation
+      window.location.href = '/projects';
+      
     } catch (error) {
       console.error("Payment failed:", error);
-      alert("Payment failed. Please try again.");
-    } finally {
       setProcessing(false);
     }
   };

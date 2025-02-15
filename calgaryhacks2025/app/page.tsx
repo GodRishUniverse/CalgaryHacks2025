@@ -3,6 +3,8 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useState } from "react";
+import { useAuth } from "@/contexts/AuthContext";
+import { useRouter } from "next/navigation";
 
 const TOP_PROJECTS = [
   {
@@ -84,7 +86,17 @@ const HOW_IT_WORKS_STEPS = [
 ];
 
 export default function Home() {
+  const { user } = useAuth();
+  const router = useRouter();
   const [openFaq, setOpenFaq] = useState<number | null>(null);
+
+  const handleDonateClick = () => {
+    if (user) {
+      router.push('/donate');
+    } else {
+      router.push('/login?redirect=/donate');
+    }
+  };
 
   return (
     <main className="min-h-screen bg-white text-gray-800">
@@ -98,14 +110,15 @@ export default function Home() {
             A decentralized governance system empowering donors to
             democratically fund wildlife conservation projects.
           </p>
-          <Link
-            href="/donate"
-            className="px-12 py-4 bg-gradient-to-r from-pink-500 to-rose-400 text-white rounded-full font-bold text-lg 
-            hover:from-pink-600 hover:to-rose-500 transform hover:scale-105 transition-all shadow-lg 
-            animate-pulse hover:animate-none"
+          <button
+            onClick={handleDonateClick}
+            className="px-12 py-4 bg-gradient-to-r from-pink-500 to-rose-400 text-white 
+            rounded-full font-bold text-lg hover:from-pink-600 hover:to-rose-500 
+            transform hover:scale-105 transition-all shadow-lg animate-pulse 
+            hover:animate-none"
           >
             Donate Now
-          </Link>
+          </button>
         </div>
       </div>
 
