@@ -3,6 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useState } from "react";
+import WalletButton from '@/components/WalletButton';
 
 const TOP_PROJECTS = [
   {
@@ -88,6 +89,7 @@ export default function Home() {
 
   return (
     <main className="min-h-screen bg-white text-gray-800">
+      <WalletButton />
       {/* Hero Section */}
       <div className="container mx-auto px-6 py-16">
         <div className="flex flex-col items-center text-center space-y-8">

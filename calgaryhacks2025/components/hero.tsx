@@ -1,3 +1,4 @@
+import React from 'react';
 import NextLogo from "./next-logo";
 import SupabaseLogo from "./supabase-logo";
 
