@@ -5,7 +5,6 @@ from langchain_community.document_loaders import TextLoader, PyPDFLoader, CSVLoa
 from langchain.chains import RetrievalQA
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.vectorstores import Chroma
-from langchain_openai import OpenAIEmbeddings
 from langchain.schema import Document
 
 class Server:

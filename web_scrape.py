@@ -43,6 +43,10 @@ def scrape_text_from_url(url):
             print(f"Error processing HTML: {e}")
             return None
 
+def format_search_data(results):
+    return "\n".join([f"- {res['title']}: {res['snippet']}" for res in results])
+
+
 if __name__ == "__main__":
     data = [
         {'title': 'OREGON WOLF CONSERVATION AND MANAGEMENT PLAN', 'link': 'https://www.dfw.state.or.us/Wolves/docs/2019_Oregon_Wolf_Plan.pdf', 'snippet': 'Jun 7, 2019 ... Develop an effective workload sharing program with the U.S. Fish and Wildlife Service. (USFWS) to monitor expanding wolf populations and address\xa0...'},
@@ -51,8 +55,18 @@ if __name__ == "__main__":
     ]
 
     links = get_links(data)
-    for link in links:
-        print(scrape_text_from_url(link))
+    results = []
+
+    for item in data:  # Add a delay to avoid overwhelming the server
+        link = item['link']
+        scraped_text = scrape_text_from_url(link)
+        if scraped_text:
+            # Add the scraped text to the snippet field
+            item['snippet'] = scraped_text
+            results.append(item)
         time.sleep(2)  # Add a delay to avoid overwhelming the server
 
+    formatted_results = format_search_data(results)
+
+    print(formatted_results)
 
