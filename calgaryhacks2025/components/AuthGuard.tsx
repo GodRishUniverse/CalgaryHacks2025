@@ -10,7 +10,7 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (!loading && !user) {
-      router.push('/login?redirect=' + window.location.pathname);
+      router.push("/login?redirect=" + window.location.pathname);
     }
   }, [user, loading, router]);
 
@@ -27,4 +27,4 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
   }
 
   return <>{children}</>;
-} 
+}

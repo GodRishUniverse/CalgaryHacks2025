@@ -7,37 +7,37 @@ import { useSearchParams } from "next/navigation";
 const customTheme = {
   default: {
     colors: {
-      brand: '#ec4899', // pink-500
-      brandAccent: '#f43f5e', // rose-400
-      brandButtonText: 'white',
-      defaultButtonBackground: 'white',
-      defaultButtonBackgroundHover: '#fdf2f8', // pink-50
-      defaultButtonBorder: '#e5e7eb', // gray-200
-      defaultButtonText: '#4b5563', // gray-600
-      inputBackground: 'white',
-      inputBorder: '#e5e7eb', // gray-200
-      inputBorderHover: '#ec4899', // pink-500
-      inputBorderFocus: '#ec4899', // pink-500
+      brand: "#ec4899", // pink-500
+      brandAccent: "#f43f5e", // rose-400
+      brandButtonText: "white",
+      defaultButtonBackground: "white",
+      defaultButtonBackgroundHover: "#fdf2f8", // pink-50
+      defaultButtonBorder: "#e5e7eb", // gray-200
+      defaultButtonText: "#4b5563", // gray-600
+      inputBackground: "white",
+      inputBorder: "#e5e7eb", // gray-200
+      inputBorderHover: "#ec4899", // pink-500
+      inputBorderFocus: "#ec4899", // pink-500
     },
     space: {
-      buttonPadding: '12px 16px',
-      inputPadding: '12px 16px',
+      buttonPadding: "12px 16px",
+      inputPadding: "12px 16px",
     },
     borderWidths: {
-      buttonBorderWidth: '1px',
-      inputBorderWidth: '1px',
+      buttonBorderWidth: "1px",
+      inputBorderWidth: "1px",
     },
     radii: {
-      borderRadiusButton: '8px',
-      buttonBorderRadius: '8px',
-      inputBorderRadius: '8px',
+      borderRadiusButton: "8px",
+      buttonBorderRadius: "8px",
+      inputBorderRadius: "8px",
     },
     fonts: {
       bodyFontFamily: `ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif`,
       buttonFontFamily: `ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif`,
       inputFontFamily: `ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif`,
     },
-  }
+  },
 };
 
 export default function AuthForm() {

@@ -34,9 +34,7 @@ export default function RootLayout({
       <body className="bg-background text-foreground">
         <AuthProvider>
           <Navbar />
-          <main>
-            {children}
-          </main>
+          <main>{children}</main>
         </AuthProvider>
       </body>
     </html>

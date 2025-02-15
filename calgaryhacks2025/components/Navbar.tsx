@@ -9,7 +9,7 @@ export default function Navbar() {
   const pathname = usePathname();
 
   // Don't show navbar on login page
-  if (pathname === '/login') return null;
+  if (pathname === "/login") return null;
 
   return (
     <nav className="bg-white border-b border-gray-200 sticky top-0 z-50">
@@ -25,22 +25,20 @@ export default function Navbar() {
           <div className="flex items-center gap-6">
             {user ? (
               <>
-                <Link 
-                  href="/projects" 
+                <Link
+                  href="/projects"
                   className="text-gray-600 hover:text-pink-500 transition-colors"
                 >
                   Projects
                 </Link>
-                <Link 
-                  href="/dashboard" 
+                <Link
+                  href="/dashboard"
                   className="text-gray-600 hover:text-pink-500 transition-colors"
                 >
                   Dashboard
                 </Link>
                 <div className="flex items-center gap-4">
-                  <span className="text-sm text-gray-500">
-                    {user.email}
-                  </span>
+                  <span className="text-sm text-gray-500">{user.email}</span>
                   <button
                     onClick={() => signOut()}
                     className="px-4 py-2 text-sm border border-gray-200 rounded-lg 
@@ -64,4 +62,4 @@ export default function Navbar() {
       </div>
     </nav>
   );
-} 
+}

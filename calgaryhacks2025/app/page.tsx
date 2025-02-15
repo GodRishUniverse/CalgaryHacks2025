@@ -92,9 +92,9 @@ export default function Home() {
 
   const handleDonateClick = () => {
     if (user) {
-      router.push('/donate');
+      router.push("/donate");
     } else {
-      router.push('/login?redirect=/donate');
+      router.push("/login?redirect=/donate");
     }
   };
 
@@ -267,7 +267,7 @@ export default function Home() {
             icon="🔗"
           />
           <FeatureCard
-            title="Secure Authentication"
+            title="Secure Auathentication"
             description="MetaMask integration with one-wallet-per-user policy"
             icon="🔒"
           />

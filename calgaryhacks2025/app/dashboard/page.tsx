@@ -81,14 +81,18 @@ export default function DashboardPage() {
           <h1 className="text-4xl font-bold mb-8 text-center bg-clip-text text-transparent bg-gradient-to-r from-pink-500 to-rose-400">
             Dashboard
           </h1>
-          
+
           <div className="max-w-4xl mx-auto">
             <div className="bg-white rounded-xl p-6 mb-8 shadow-md border border-gray-200 hover:border-pink-300 transition-all">
-              <h2 className="text-2xl font-semibold mb-4 text-gray-800">Wallet Connection</h2>
+              <h2 className="text-2xl font-semibold mb-4 text-gray-800">
+                Wallet Connection
+              </h2>
               {wallet ? (
                 <div className="space-y-2">
                   <p className="text-pink-500 font-medium">Wallet Connected:</p>
-                  <p className="font-mono text-sm text-gray-600 bg-gray-50 p-3 rounded-lg">{wallet}</p>
+                  <p className="font-mono text-sm text-gray-600 bg-gray-50 p-3 rounded-lg">
+                    {wallet}
+                  </p>
                 </div>
               ) : (
                 <button
@@ -104,12 +108,14 @@ export default function DashboardPage() {
 
             <div className="grid md:grid-cols-2 gap-6">
               <div className="bg-white rounded-xl p-6 shadow-md border border-gray-200 hover:border-pink-300 transition-all">
-                <h2 className="text-2xl font-semibold mb-4 text-gray-800">Your Contributions</h2>
+                <h2 className="text-2xl font-semibold mb-4 text-gray-800">
+                  Your Contributions
+                </h2>
                 <div className="space-y-4">
                   <div className="text-3xl font-bold text-pink-500">$0</div>
                   <p className="text-gray-600">No contributions yet</p>
                   <button
-                    onClick={() => router.push('/donate')}
+                    onClick={() => router.push("/donate")}
                     className="px-4 py-2 bg-gradient-to-r from-pink-500 to-rose-400 
                     text-white rounded-lg font-semibold transition-all transform hover:scale-105 
                     hover:from-pink-600 hover:to-rose-500 text-sm"
@@ -118,9 +124,11 @@ export default function DashboardPage() {
                   </button>
                 </div>
               </div>
-              
+
               <div className="bg-white rounded-xl p-6 shadow-md border border-gray-200 hover:border-pink-300 transition-all">
-                <h2 className="text-2xl font-semibold mb-4 text-gray-800">Active Proposals</h2>
+                <h2 className="text-2xl font-semibold mb-4 text-gray-800">
+                  Active Proposals
+                </h2>
                 <div className="space-y-4">
                   <div className="text-3xl font-bold text-pink-500">0</div>
                   <p className="text-gray-600">No active proposals</p>
@@ -142,9 +150,12 @@ export default function DashboardPage() {
             <div className="bg-white rounded-xl p-8 max-w-md w-full shadow-xl">
               <div className="text-center">
                 <div className="text-6xl mb-4">🦊</div>
-                <h3 className="text-2xl font-bold mb-4 text-gray-800">MetaMask Required</h3>
+                <h3 className="text-2xl font-bold mb-4 text-gray-800">
+                  MetaMask Required
+                </h3>
                 <p className="text-gray-600 mb-6">
-                  To connect your wallet and participate in WildlifeDAO, you need to install the MetaMask browser extension.
+                  To connect your wallet and participate in WildlifeDAO, you
+                  need to install the MetaMask browser extension.
                 </p>
                 <div className="space-y-4">
                   <a

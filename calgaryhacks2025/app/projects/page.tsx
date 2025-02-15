@@ -13,7 +13,7 @@ interface Project {
   goal: number;
   votes: number;
   progress: number;
-  status: 'active' | 'funded' | 'completed';
+  status: "active" | "funded" | "completed";
   deadline: string;
 }
 
@@ -21,41 +21,44 @@ const MOCK_PROJECTS: Project[] = [
   {
     id: 1,
     title: "Sumatran Rhino Conservation",
-    description: "Protecting the critically endangered Sumatran rhinos through habitat preservation and anti-poaching measures.",
+    description:
+      "Protecting the critically endangered Sumatran rhinos through habitat preservation and anti-poaching measures.",
     raised: 45000,
     goal: 60000,
     votes: 234,
     progress: 75,
-    status: 'active',
-    deadline: '2024-04-01'
+    status: "active",
+    deadline: "2024-04-01",
   },
   {
     id: 2,
     title: "Amazon Rainforest Protection",
-    description: "Supporting indigenous communities in protecting their ancestral forests from illegal logging.",
+    description:
+      "Supporting indigenous communities in protecting their ancestral forests from illegal logging.",
     raised: 128000,
     goal: 150000,
     votes: 543,
     progress: 85,
-    status: 'active',
-    deadline: '2024-03-15'
+    status: "active",
+    deadline: "2024-03-15",
   },
   {
     id: 3,
     title: "Arctic Fox Habitat Preservation",
-    description: "Establishing protected areas for Arctic fox breeding grounds in Iceland.",
+    description:
+      "Establishing protected areas for Arctic fox breeding grounds in Iceland.",
     raised: 28000,
     goal: 50000,
     votes: 167,
     progress: 56,
-    status: 'active',
-    deadline: '2024-05-01'
-  }
+    status: "active",
+    deadline: "2024-05-01",
+  },
 ];
 
 export default function ProjectsPage() {
   const [user, setUser] = useState<any>(null);
-  const [userVotes, setUserVotes] = useState<{[key: number]: number}>({});
+  const [userVotes, setUserVotes] = useState<{ [key: number]: number }>({});
   const router = useRouter();
 
   useEffect(() => {
@@ -63,9 +66,11 @@ export default function ProjectsPage() {
   }, []);
 
   const checkAuth = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     if (!user) {
-      router.push('/login');
+      router.push("/login");
       return;
     }
     setUser(user);
@@ -73,9 +78,9 @@ export default function ProjectsPage() {
 
   const handleVote = (projectId: number) => {
     // Mock voting functionality
-    setUserVotes(prev => ({
+    setUserVotes((prev) => ({
       ...prev,
-      [projectId]: (prev[projectId] || 0) + 1
+      [projectId]: (prev[projectId] || 0) + 1,
     }));
   };
 
@@ -108,16 +113,21 @@ export default function ProjectsPage() {
           {/* Projects Grid */}
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {MOCK_PROJECTS.map((project) => (
-              <div key={project.id} className="bg-white rounded-xl overflow-hidden border border-gray-200 hover:border-pink-300 transition-all shadow-md">
+              <div
+                key={project.id}
+                className="bg-white rounded-xl overflow-hidden border border-gray-200 hover:border-pink-300 transition-all shadow-md"
+              >
                 <div className="p-6">
                   <div className="flex justify-between items-start mb-4">
-                    <h3 className="text-xl font-semibold text-gray-800">{project.title}</h3>
+                    <h3 className="text-xl font-semibold text-gray-800">
+                      {project.title}
+                    </h3>
                     <span className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm">
                       {project.status}
                     </span>
                   </div>
                   <p className="text-gray-600 mb-4">{project.description}</p>
-                  
+
                   <div className="space-y-4">
                     <div className="w-full bg-gray-100 rounded-full h-2.5">
                       <div
@@ -125,15 +135,22 @@ export default function ProjectsPage() {
                         style={{ width: `${project.progress}%` }}
                       ></div>
                     </div>
-                    
+
                     <div className="flex justify-between text-sm">
-                      <span className="text-gray-600">${project.raised.toLocaleString()} raised</span>
-                      <span className="text-gray-600">Goal: ${project.goal.toLocaleString()}</span>
+                      <span className="text-gray-600">
+                        ${project.raised.toLocaleString()} raised
+                      </span>
+                      <span className="text-gray-600">
+                        Goal: ${project.goal.toLocaleString()}
+                      </span>
                     </div>
 
                     <div className="flex justify-between items-center">
                       <div className="text-sm text-gray-600">
-                        <span className="text-pink-500 font-medium">{project.votes}</span> votes
+                        <span className="text-pink-500 font-medium">
+                          {project.votes}
+                        </span>{" "}
+                        votes
                       </div>
                       <button
                         onClick={() => handleVote(project.id)}
@@ -146,7 +163,8 @@ export default function ProjectsPage() {
                     </div>
 
                     <div className="text-sm text-gray-500">
-                      Deadline: {new Date(project.deadline).toLocaleDateString()}
+                      Deadline:{" "}
+                      {new Date(project.deadline).toLocaleDateString()}
                     </div>
                   </div>
                 </div>
@@ -157,4 +175,4 @@ export default function ProjectsPage() {
       </div>
     </AuthGuard>
   );
-} 
+}

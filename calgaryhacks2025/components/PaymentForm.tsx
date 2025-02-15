@@ -10,7 +10,9 @@ export default function PaymentForm() {
 
   useEffect(() => {
     const getUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       setUser(user);
     };
     getUser();
@@ -24,19 +26,18 @@ export default function PaymentForm() {
 
     try {
       // Mock successful payment with delay
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+
       // Save donation record to Supabase (optional)
-      await supabase.from('donations').insert({
+      await supabase.from("donations").insert({
         user_id: user.id,
         amount: Number(amount),
         tokens: Number(amount) * 100,
-        created_at: new Date().toISOString()
+        created_at: new Date().toISOString(),
       });
-      
+
       // Direct navigation
-      window.location.href = '/projects';
-      
+      window.location.href = "/projects";
     } catch (error) {
       console.error("Payment failed:", error);
       setProcessing(false);
@@ -69,7 +70,11 @@ export default function PaymentForm() {
             />
           </div>
           <p className="text-sm text-gray-500 mt-2">
-            You will receive <span className="text-pink-500 font-medium">{amount ? Number(amount) * 100 : 0} WLD</span> tokens
+            You will receive{" "}
+            <span className="text-pink-500 font-medium">
+              {amount ? Number(amount) * 100 : 0} WLD
+            </span>{" "}
+            tokens
           </p>
         </div>
 
