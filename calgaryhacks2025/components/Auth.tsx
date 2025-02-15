@@ -2,7 +2,8 @@
 
 import { Auth } from "@supabase/auth-ui-react";
 import { supabase } from "@/lib/supabase";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 
 const customTheme = {
   default: {
@@ -41,8 +42,27 @@ const customTheme = {
 };
 
 export default function AuthForm() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const redirectTo = searchParams.get("redirect") || "/donate";
+  const [origin, setOrigin] = useState("");
+
+  // Set origin after component mounts (client-side only)
+  useEffect(() => {
+    setOrigin(window.location.origin);
+  }, []);
+
+  // Listen for auth state changes
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_IN' && session) {
+        // Redirect to donation page after successful sign in
+        router.push('/donate');
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, [router]);
 
   return (
     <div className="max-w-md mx-auto p-8 bg-white rounded-xl shadow-md">
@@ -56,7 +76,7 @@ export default function AuthForm() {
         theme="default"
         showLinks={true}
         providers={[]}
-        redirectTo={`${window.location.origin}${redirectTo}`}
+        redirectTo={origin ? `${origin}${redirectTo}` : redirectTo}
       />
     </div>
   );
