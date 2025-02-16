@@ -5,6 +5,14 @@ import Image from "next/image";
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "next/navigation";
+import { ethers } from "ethers";
+import { getWildlifeDAOContract } from "@/lib/contracts/WildlifeDAO";
+import { getWLDTokenContract } from "@/lib/contracts/WildlifeDAOToken";
+import {
+  WILDLIFE_DAO_ADDRESS,
+  WILDLIFE_TOKEN_ADDRESS,
+} from "@/lib/contracts/WildlifeDAO";
+import { getDonationContract } from "@/lib/contracts/DonationABI";
 
 const TOP_PROJECTS = [
   {
@@ -35,52 +43,45 @@ const TOP_PROJECTS = [
 
 const FAQ_ITEMS = [
   {
-    question: "How does quadratic voting work?",
-    answer:
-      "Quadratic voting ensures fair governance by making each additional vote cost more than the previous one. For example, 1 vote costs 1 token, 2 votes cost 4 tokens, 3 votes cost 9 tokens, and so on. This prevents wealthy donors from having disproportionate influence.",
+    question: "How does the voting system work?",
+    answer: "Each WLD token represents one vote. Projects need majority support and minimum participation to pass. Voting periods last 7 days, and results are recorded on the blockchain for transparency.",
   },
   {
     question: "What happens after I donate?",
-    answer:
-      "When you donate, you receive WildlifeDAO Tokens (WLD) proportional to your contribution. These tokens give you voting power to influence which conservation projects receive funding. All transactions are recorded on the blockchain for complete transparency.",
+    answer: "Your ETH donation is converted to WLD tokens at a rate of 1 WLD per $1. These tokens give you voting power to influence which conservation projects receive funding. All transactions are recorded on the blockchain.",
   },
   {
     question: "How are projects validated?",
-    answer:
-      "Each project undergoes a rigorous two-phase validation process. First, it must receive approval from at least two authorized validators. Then, it moves to community voting where token holders can participate in funding decisions.",
+    answer: "Projects undergo AI analysis for viability scoring and community voting. The AI evaluates factors like scientific alignment, biodiversity impact, and sustainability. Community members then vote using their WLD tokens.",
   },
 ];
 
 const STATISTICS = [
-  { number: "1.2M", label: "Total Donations" },
-  { number: "156", label: "Projects Funded" },
-  { number: "45K", label: "Active Donors" },
-  { number: "92%", label: "Success Rate" },
+  { number: "$1.2M", label: "Total Value Locked" },
+  { number: "156", label: "Active Projects" },
+  { number: "45K", label: "WLD Holders" },
+  { number: "92%", label: "Project Success Rate" },
 ];
 
 const HOW_IT_WORKS_STEPS = [
   {
     title: "Make a Donation",
-    description:
-      "Contribute to wildlife conservation using traditional payment methods or cryptocurrency.",
+    description: "Contribute ETH to receive WLD governance tokens.",
     icon: "💰",
   },
   {
     title: "Receive WLD Tokens",
-    description:
-      "Get governance tokens proportional to your donation (1 USD = 100 WLD).",
+    description: "Get 1 WLD token for every $1 worth of ETH donated.",
     icon: "🎫",
   },
   {
     title: "Vote on Projects",
-    description:
-      "Use your tokens to support conservation projects through quadratic voting.",
+    description: "Use your WLD tokens to support conservation projects through voting.",
     icon: "✋",
   },
   {
     title: "Track Impact",
-    description:
-      "Monitor project progress and see your contribution's direct impact.",
+    description: "Monitor project progress and voting results on-chain.",
     icon: "📊",
   },
 ];
@@ -95,6 +96,58 @@ export default function Home() {
       router.push("/donate");
     } else {
       router.push("/login?redirect=/donate");
+    }
+  };
+
+  const handleDonate = async (amount: number) => {
+    try {
+      if (!window.ethereum) {
+        alert("Please install MetaMask!");
+        return;
+      }
+
+      // First request account access
+      await window.ethereum.request({ method: "eth_requestAccounts" });
+
+      const provider = new ethers.BrowserProvider(window.ethereum);
+      const signer = await provider.getSigner();
+      const donationContract = await getDonationContract(signer);
+
+      console.log("Starting donation...");
+      console.log("Amount:", amount);
+      console.log("Signer:", await signer.getAddress());
+
+      // First check if token contract has approved DAO
+      const tokenContract = await getWLDTokenContract(signer);
+      const daoAddress = await tokenContract.daoContract();
+      console.log("DAO address in token contract:", daoAddress);
+      console.log("Expected DAO address:", WILDLIFE_DAO_ADDRESS);
+
+      // Make the donation
+      const tx = await donationContract.donate(
+        amount, // USD amount
+        await signer.getAddress(), // recipient
+        {
+          gasLimit: 500000, // Increased gas limit
+        }
+      );
+
+      console.log("Transaction sent:", tx.hash);
+      const receipt = await tx.wait();
+      console.log("Transaction confirmed:", receipt);
+
+      alert("Donation successful! You have received WLD tokens.");
+    } catch (error: any) {
+      console.error("Donation error:", error);
+      if (error.message.includes("user rejected")) {
+        alert("Transaction was rejected in MetaMask. Please try again.");
+      } else if (error.message.includes("insufficient funds")) {
+        alert(
+          "Insufficient ETH for gas fees. Please add more ETH to your wallet."
+        );
+      } else {
+        alert(`Donation failed: ${error.message}`);
+      }
     }
   };
 
@@ -243,12 +296,7 @@ export default function Home() {
             </ul>
           </div>
           <div className="relative h-96">
-            <Image
-              src="/blockchain-graphic.png"
-              alt="Blockchain Technology"
-              fill
-              className="object-contain"
-            />
+            
           </div>
         </div>
       </div>
@@ -306,22 +354,62 @@ export default function Home() {
 
       {/* New CTA Section */}
       <div className="container mx-auto px-6 py-16 text-center">
-        <div className="max-w-3xl mx-auto">
-          <h2 className="text-3xl font-bold mb-6 text-gray-800">
+        <div className="text-center max-w-3xl mx-auto px-4">
+          <h1 className="text-4xl font-bold text-gray-900 mb-6">
             Ready to Make a Difference?
-          </h2>
+          </h1>
+
           <p className="text-xl text-gray-600 mb-8">
-            Join our community of conservation-minded donors and help shape the
-            future of wildlife preservation.
+            Join our community of conservation innovators. Submit your wildlife
+            preservation project or contribute to existing initiatives.
           </p>
-          <Link
-            href="/login"
-            className="inline-block px-12 py-4 bg-gradient-to-r from-pink-500 to-rose-400 
-                     text-white rounded-full font-bold text-lg hover:from-pink-600 
-                     hover:to-rose-500 transform hover:scale-105 transition-all shadow-lg"
-          >
-            Start Contributing
-          </Link>
+
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Link
+              href="/projects/submit"
+              className="inline-flex items-center justify-center px-8 py-4 text-lg font-semibold 
+              bg-gradient-to-r from-pink-500 to-pink-600 text-white rounded-xl 
+              shadow-lg hover:scale-105 transition-all duration-200"
+            >
+              Submit a Project 🌿
+            </Link>
+
+            <Link
+              href="/projects"
+              className="inline-flex items-center justify-center px-8 py-4 text-lg font-semibold 
+              bg-white text-pink-600 border-2 border-pink-500 rounded-xl 
+              shadow-md hover:scale-105 transition-all duration-200"
+            >
+              View Projects 🔍
+            </Link>
+          </div>
+
+          <div className="mt-12 grid md:grid-cols-3 gap-8">
+            <div className="p-6 bg-white rounded-xl shadow-md">
+              <div className="text-3xl mb-2">🌍</div>
+              <h3 className="text-lg font-semibold mb-2">Submit Your Vision</h3>
+              <p className="text-gray-600">
+                Propose your wildlife conservation project and get community
+                support
+              </p>
+            </div>
+
+            <div className="p-6 bg-white rounded-xl shadow-md">
+              <div className="text-3xl mb-2">⚡</div>
+              <h3 className="text-lg font-semibold mb-2">Get Validated</h3>
+              <p className="text-gray-600">
+                Projects are reviewed by our expert validators for feasibility
+              </p>
+            </div>
+
+            <div className="p-6 bg-white rounded-xl shadow-md">
+              <div className="text-3xl mb-2">🚀</div>
+              <h3 className="text-lg font-semibold mb-2">Receive Funding</h3>
+              <p className="text-gray-600">
+                Approved projects get funded through community voting
+              </p>
+            </div>
+          </div>
         </div>
       </div>
     </main>

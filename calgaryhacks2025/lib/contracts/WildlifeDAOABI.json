@@ -1,0 +1,185 @@
+[
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_wldToken",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "constructor"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "string",
+        "name": "proposalId",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "title",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "description",
+        "type": "string"
+      },
+      {
+        "internalType": "uint256",
+        "name": "fundingRequired",
+        "type": "uint256"
+      }
+    ],
+    "name": "submitProject",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "projectId",
+        "type": "uint256"
+      }
+    ],
+    "name": "checkAndAutoValidate",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "string",
+        "name": "proposalId",
+        "type": "string"
+      }
+    ],
+    "name": "getProposalStatus",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "projectId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "enum WildlifeDAO.ProjectStatus",
+        "name": "status",
+        "type": "uint8"
+      },
+      {
+        "internalType": "uint256",
+        "name": "submissionTime",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "votingStartTime",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "votingEndTime",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "string",
+        "name": "proposalId",
+        "type": "string"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "projectId",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "submitter",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "string",
+        "name": "title",
+        "type": "string"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "fundingRequired",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "string",
+        "name": "status",
+        "type": "string"
+      }
+    ],
+    "name": "ProposalSubmitted",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "projectId",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "enum WildlifeDAO.ProjectStatus",
+        "name": "oldStatus",
+        "type": "uint8"
+      },
+      {
+        "indexed": false,
+        "internalType": "enum WildlifeDAO.ProjectStatus",
+        "name": "newStatus",
+        "type": "uint8"
+      }
+    ],
+    "name": "ProjectStatusChanged",
+    "type": "event"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_usdAmount",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "_recipient",
+        "type": "address"
+      }
+    ],
+    "name": "donate",
+    "outputs": [],
+    "stateMutability": "payable",
+    "type": "function"
+  }
+] 

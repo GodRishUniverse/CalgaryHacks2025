@@ -4,171 +4,573 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
 import AuthGuard from "@/components/AuthGuard";
+import { ethers } from "ethers";
+import { getWLDTokenContract } from "@/lib/contracts/WildlifeDAOToken";
+import { getWildlifeDAOContract } from "@/lib/contracts/WildlifeDAO";
+import Link from "next/link";
+import { getVotingContract } from "@/lib/contracts/VotingABI";
+import { WILDLIFE_DAO_ABI } from "@/lib/contracts/WildlifeDAO";
 
 interface Project {
-  id: number;
+  id: number;          // Supabase ID
+  onchain_id: number;  // Smart contract project ID
   title: string;
   description: string;
-  raised: number;
-  goal: number;
-  votes: number;
-  progress: number;
-  status: "active" | "funded" | "completed";
-  deadline: string;
+  funding_required: number;
+  status: "Pending" | "Validating" | "Approved" | "Rejected" | "Executed";
+  forVotes: number;
+  againstVotes: number;
+  votingEnds: Date;
+  votingStartTime: number;
+  votingEndTime: number;
+  ai_score?: number;
 }
 
-const MOCK_PROJECTS: Project[] = [
-  {
-    id: 1,
-    title: "Sumatran Rhino Conservation",
-    description:
-      "Protecting the critically endangered Sumatran rhinos through habitat preservation and anti-poaching measures.",
-    raised: 45000,
-    goal: 60000,
-    votes: 234,
-    progress: 75,
-    status: "active",
-    deadline: "2024-04-01",
-  },
-  {
-    id: 2,
-    title: "Amazon Rainforest Protection",
-    description:
-      "Supporting indigenous communities in protecting their ancestral forests from illegal logging.",
-    raised: 128000,
-    goal: 150000,
-    votes: 543,
-    progress: 85,
-    status: "active",
-    deadline: "2024-03-15",
-  },
-  {
-    id: 3,
-    title: "Arctic Fox Habitat Preservation",
-    description:
-      "Establishing protected areas for Arctic fox breeding grounds in Iceland.",
-    raised: 28000,
-    goal: 50000,
-    votes: 167,
-    progress: 56,
-    status: "active",
-    deadline: "2024-05-01",
-  },
-];
+// Helper function for formatting time
+function formatTimeRemaining(endDate: Date): string {
+  const now = new Date();
+  const diff = endDate.getTime() - now.getTime();
+
+  if (diff <= 0) return "Voting ended";
+
+  const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+  const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+  const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+
+  if (days > 0) return `${days}d ${hours}h remaining`;
+  if (hours > 0) return `${hours}h ${minutes}m remaining`;
+  return `${minutes}m remaining`;
+}
+
+// Add this helper function at the top of the file
+function getVotingTimeStatus(project: Project) {
+  const now = new Date();
+  const endTime = new Date(project.votingEndTime);
+  const startTime = new Date(project.votingStartTime);
+
+  if (now > endTime) {
+    return {
+      status: "Ended",
+      timeLeft: "Voting ended",
+      color: "text-red-500",
+    };
+  }
+
+  const timeLeft = endTime.getTime() - now.getTime();
+  const daysLeft = Math.floor(timeLeft / (1000 * 60 * 60 * 24));
+  const hoursLeft = Math.floor(
+    (timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)
+  );
+
+  let status = "Active";
+  let color = "text-green-500";
+
+  if (daysLeft < 1) {
+    status = "Ending Soon";
+    color = "text-yellow-500";
+  }
+
+  return {
+    status,
+    timeLeft:
+      daysLeft > 0 ? `${daysLeft}d ${hoursLeft}h left` : `${hoursLeft}h left`,
+    color,
+  };
+}
+
+// First, let's create a helper function to get emojis for projects
+function getProjectEmoji(title: string): string {
+  const titleLower = title.toLowerCase();
+  if (titleLower.includes("rhino")) return "🦏";
+  if (titleLower.includes("rainforest") || titleLower.includes("amazon"))
+    return "🌳";
+  if (titleLower.includes("arctic") || titleLower.includes("fox")) return "🦊";
+  if (titleLower.includes("ocean")) return "🌊";
+  if (titleLower.includes("elephant")) return "🐘";
+  if (titleLower.includes("tiger")) return "🐯";
+  if (titleLower.includes("panda")) return "🐼";
+  if (titleLower.includes("whale")) return "🐋";
+  return "🌍"; // Default emoji for other conservation projects
+}
+
+// Add this function to fetch voting data for a project
+const fetchProjectVotes = async (project: Project) => {
+  try {
+    if (!window.ethereum || !project.onchain_id) return null;
+
+    const provider = new ethers.BrowserProvider(
+      window.ethereum as ethers.Eip1193Provider
+    );
+    const signer = await provider.getSigner();
+    const daoContract = await getWildlifeDAOContract(signer);
+
+    // Get voting data from the contract
+    const state = await daoContract.getProjectState(BigInt(project.onchain_id));
+    console.log("Project state from contract:", state);
+    
+    return {
+      forVotes: Number(state[3]), // forVotes is the 4th return value
+      againstVotes: Number(state[4]), // againstVotes is the 5th return value
+      votingStartTime: Number(state[1]), // votingStartTime is the 2nd return value
+      votingEndTime: Number(state[2]) // votingEndTime is the 3rd return value
+    };
+  } catch (error) {
+    console.error("Error fetching project votes:", error);
+    return null;
+  }
+};
+
+// Update the getTimeLeft function to always show some time remaining
+const getTimeLeft = (endTime: number): string => {
+  const now = Date.now();
+  const timeLeft = endTime - now;
+  
+  // Always show at least 1 day remaining for demo purposes
+  const daysLeft = Math.max(1, Math.floor(timeLeft / (1000 * 60 * 60 * 24)));
+  const hoursLeft = Math.floor((timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+  const minutesLeft = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+  
+  return `${daysLeft}d ${hoursLeft}h ${minutesLeft}m`;
+};
 
 export default function ProjectsPage() {
   const [user, setUser] = useState<any>(null);
-  const [userVotes, setUserVotes] = useState<{ [key: number]: number }>({});
+  const [tokenBalance, setTokenBalance] = useState<string>("0");
+  const [totalSupply, setTotalSupply] = useState<string>("0");
+  const [votingPower, setVotingPower] = useState<number>(0);
+  const [totalValueLocked, setTotalValueLocked] = useState<string>("0");
   const router = useRouter();
+  const [now, setNow] = useState(new Date());
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    checkAuth();
-  }, []);
+  const fetchTokenInfo = async (walletAddress: string) => {
+    try {
+      if (!window.ethereum) {
+        alert("Please connect MetaMask to view your voting power");
+        return;
+      }
 
-  const checkAuth = async () => {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (!user) {
-      router.push("/login");
-      return;
+      const provider = new ethers.BrowserProvider(
+        window.ethereum as ethers.Eip1193Provider
+      );
+      const signer = await provider.getSigner();
+
+      // Get both contracts
+      const daoContract = await getWildlifeDAOContract(signer);
+      const wldToken = await getWLDTokenContract(signer);
+
+      try {
+        // First, let's log the raw TVL value
+        const rawTVL = await daoContract.totalValueLocked();
+        console.log("Raw TVL:", rawTVL.toString());
+
+        // Fetch all data in parallel
+        const [balance, supply, tvl] = await Promise.all([
+          wldToken.balanceOf(walletAddress),
+          wldToken.totalSupply(),
+          daoContract.totalValueLocked(),
+        ]);
+
+        // Format the values and log them
+        const formattedBalance = ethers.formatUnits(balance, 18);
+        const formattedSupply = ethers.formatUnits(supply, 18);
+        const formattedTVL = ethers.formatUnits(tvl, 18);
+
+        console.log("Formatted values:", {
+          balance: formattedBalance,
+          supply: formattedSupply,
+          tvl: formattedTVL,
+        });
+
+        // Update state
+        setTokenBalance(formattedBalance);
+        setTotalSupply(formattedSupply);
+        setTotalValueLocked(formattedTVL);
+
+        // Calculate voting power
+        const votingPowerBips =
+          (Number(formattedBalance) * 10000) / Number(formattedSupply);
+        setVotingPower(votingPowerBips);
+      } catch (error) {
+        console.error("Error fetching contract data:", error);
+        // Log more detailed error information
+        if (error instanceof Error) {
+          console.error("Error details:", {
+            message: error.message,
+            stack: error.stack,
+          });
+        }
+      }
+    } catch (error) {
+      console.error("Error setting up contracts:", error);
     }
-    setUser(user);
   };
 
-  const handleVote = (projectId: number) => {
-    // Mock voting functionality
-    setUserVotes((prev) => ({
-      ...prev,
-      [projectId]: (prev[projectId] || 0) + 1,
-    }));
+  useEffect(() => {
+    const checkAuthAndFetchData = async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) {
+        router.push("/login");
+        return;
+      }
+      setUser(user);
+
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("wallet_address")
+        .eq("id", user.id)
+        .single();
+
+      if (profile?.wallet_address) {
+        await fetchTokenInfo(profile.wallet_address);
+      }
+    };
+
+    checkAuthAndFetchData();
+
+    // Listen for wallet changes
+    if (window.ethereum) {
+      window.ethereum.on("accountsChanged", (accounts: string[]) => {
+        if (accounts[0]) {
+          fetchTokenInfo(accounts[0]);
+        }
+      });
+    }
+
+    return () => {
+      if (window.ethereum) {
+        window.ethereum.removeListener("accountsChanged", () => {});
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setNow(new Date());
+    }, 60000); // Update every minute
+
+    return () => clearInterval(timer);
+  }, []);
+
+  useEffect(() => {
+    const fetchProjects = async () => {
+      try {
+        console.log("Fetching projects from Supabase...");
+        
+        const { data: dbProjects, error } = await supabase
+          .from("projects")
+          .select("*")
+          .order('created_at', { ascending: false });
+
+        if (error) {
+          console.error("Error fetching projects:", error);
+          return;
+        }
+
+        console.log("Fetched projects:", dbProjects);
+
+        // Fetch voting data for each project
+        const projectsWithVotes = await Promise.all(
+          dbProjects.map(async (project) => {
+            const votes = await fetchProjectVotes(project);
+            const createdAt = new Date(project.created_at).getTime();
+            
+            // Always set votingEndTime to 7 days from now for demo
+            const votingEndTime = Date.now() + (7 * 24 * 60 * 60 * 1000);
+            
+            return {
+              ...project,
+              forVotes: votes?.forVotes || 0,
+              againstVotes: votes?.againstVotes || 0,
+              votingStartTime: createdAt,
+              votingEndTime: votingEndTime // Always 7 days from now
+            };
+          })
+        );
+
+        console.log("Projects with votes:", projectsWithVotes);
+        setProjects(projectsWithVotes);
+      } catch (error) {
+        console.error("Error fetching projects:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProjects();
+  }, []);
+
+  const handleVote = async (project: Project, support: boolean) => {
+    try {
+      if (!window.ethereum) {
+        alert("Please connect MetaMask first");
+        return;
+      }
+
+      if (!project.onchain_id) {
+        alert("Project not found on blockchain");
+        return;
+      }
+
+      await window.ethereum.request({ method: 'eth_requestAccounts' });
+      const provider = new ethers.BrowserProvider(
+        window.ethereum as ethers.Eip1193Provider
+      );
+      const signer = await provider.getSigner();
+      const daoContract = await getWildlifeDAOContract(signer);
+
+      console.log("Sending vote transaction:", {
+        projectId: BigInt(project.onchain_id).toString(),
+        support: support,
+        contractAddress: daoContract.target
+      });
+
+      const tx = await daoContract.voteOnProject(
+        BigInt(project.onchain_id),
+        support,
+        {
+          gasLimit: BigInt(500000)
+        }
+      );
+
+      console.log("Transaction sent:", {
+        hash: tx.hash,
+        data: tx.data,
+        to: tx.to,
+        from: tx.from
+      });
+
+      const receipt = await tx.wait();
+      console.log("Transaction confirmed:", receipt);
+
+      if (receipt && receipt.status === 1) {
+        // Fetch updated votes for this project
+        const updatedVotes = await fetchProjectVotes(project);
+        
+        // Update the projects state with new voting data
+        setProjects(currentProjects => 
+          currentProjects.map(p => 
+            p.id === project.id
+              ? {
+                  ...p,
+                  forVotes: updatedVotes?.forVotes || p.forVotes,
+                  againstVotes: updatedVotes?.againstVotes || p.againstVotes
+                }
+              : p
+          )
+        );
+
+        alert(`Successfully voted ${support ? "for" : "against"} the project!`);
+      }
+
+    } catch (error: any) {
+      console.error("Voting failed:", error);
+      
+      // Log the error details
+      if (error.data) console.error("Error data:", error.data);
+      if (error.transaction) console.error("Transaction details:", error.transaction);
+      if (error.code) console.error("Error code:", error.code);
+      if (error.reason) console.error("Error reason:", error.reason);
+
+      if (error.message.includes("execution reverted")) {
+        alert("Transaction failed: " + error.message);
+      } else if (error.message.includes("user rejected")) {
+        alert("Transaction was rejected by user");
+      } else {
+        alert("Failed to vote: " + error.message);
+      }
+    }
+  };
+
+  const checkProjectStatus = async (projectId: number) => {
+    try {
+      const provider = new ethers.BrowserProvider(
+        window.ethereum as ethers.Eip1193Provider
+      );
+      const signer = await provider.getSigner();
+      const daoContract = await getWildlifeDAOContract(signer);
+      
+      const status = await daoContract.debugProjectStatus(BigInt(projectId));
+      console.log("Project status:", {
+        status: status[0], // ProjectStatus enum value
+        validationCount: status[1].toString(),
+        currentTime: new Date(Number(status[2]) * 1000),
+        votingStartTime: new Date(Number(status[3]) * 1000),
+        votingEndTime: new Date(Number(status[4]) * 1000),
+        canVoteNow: status[5]
+      });
+    } catch (error) {
+      console.error("Error checking project status:", error);
+    }
   };
 
   return (
     <AuthGuard>
       <div className="min-h-screen bg-white">
         <div className="container mx-auto px-4 py-8">
-          {/* User Stats */}
+          {/* Governance Stats */}
           <div className="bg-white rounded-xl p-6 shadow-md border border-gray-200 mb-8">
-            <div className="grid md:grid-cols-4 gap-6">
+            <div className="grid md:grid-cols-3 gap-6">
               <div className="text-center">
-                <div className="text-3xl font-bold text-pink-500">500 WLD</div>
+                <div className="text-3xl font-bold text-pink-500">
+                  {Number(tokenBalance).toLocaleString(undefined, {
+                    maximumFractionDigits: 0,
+                  })}{" "}
+                  WLD
+                </div>
                 <div className="text-gray-600">Your Balance</div>
               </div>
               <div className="text-center">
-                <div className="text-3xl font-bold text-pink-500">3</div>
-                <div className="text-gray-600">Projects Supported</div>
+                <div className="text-3xl font-bold text-pink-500">
+                  {(votingPower / 100).toFixed(2)}%
+                </div>
+                <div className="text-gray-600">Voting Power</div>
               </div>
               <div className="text-center">
-                <div className="text-3xl font-bold text-pink-500">25</div>
-                <div className="text-gray-600">Total Votes Cast</div>
-              </div>
-              <div className="text-center">
-                <div className="text-3xl font-bold text-pink-500">$1,000</div>
-                <div className="text-gray-600">Total Contributed</div>
+                <div className="text-3xl font-bold text-pink-500">
+                  {Number(totalSupply).toLocaleString(undefined, {
+                    maximumFractionDigits: 0,
+                  })}{" "}
+                  WLD
+                </div>
+                <div className="text-gray-600">Total Supply</div>
               </div>
             </div>
           </div>
 
           {/* Projects Grid */}
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {MOCK_PROJECTS.map((project) => (
-              <div
+            {projects.map((project) => (
+              <Link
+                href={`/projects/${project.id}`}
                 key={project.id}
-                className="bg-white rounded-xl overflow-hidden border border-gray-200 hover:border-pink-300 transition-all shadow-md"
+                className="block transition-transform hover:scale-105"
               >
-                <div className="p-6">
-                  <div className="flex justify-between items-start mb-4">
-                    <h3 className="text-xl font-semibold text-gray-800">
-                      {project.title}
-                    </h3>
-                    <span className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm">
-                      {project.status}
-                    </span>
-                  </div>
-                  <p className="text-gray-600 mb-4">{project.description}</p>
-
-                  <div className="space-y-4">
-                    <div className="w-full bg-gray-100 rounded-full h-2.5">
-                      <div
-                        className="bg-gradient-to-r from-pink-500 to-rose-400 h-2.5 rounded-full"
-                        style={{ width: `${project.progress}%` }}
-                      ></div>
-                    </div>
-
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-600">
-                        ${project.raised.toLocaleString()} raised
-                      </span>
-                      <span className="text-gray-600">
-                        Goal: ${project.goal.toLocaleString()}
+                <div className="bg-white rounded-xl overflow-hidden border border-gray-200 hover:border-pink-300 transition-all shadow-md">
+                  <div className="p-6">
+                    <div className="flex justify-between items-start mb-4">
+                      <h3 className="text-xl font-semibold text-gray-800 flex items-center gap-2">
+                        <span>{getProjectEmoji(project.title)}</span>
+                        {project.title}
+                      </h3>
+                      <span className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm">
+                        {project.status}
                       </span>
                     </div>
 
-                    <div className="flex justify-between items-center">
-                      <div className="text-sm text-gray-600">
-                        <span className="text-pink-500 font-medium">
-                          {project.votes}
-                        </span>{" "}
-                        votes
+                    <p className="text-gray-600 mb-4">{project.description}</p>
+
+                    <div className="space-y-4">
+                      {/* Funding Required and AI Score */}
+                      <div className="flex justify-between text-sm text-gray-600">
+                        <div>Funding Required: ${project.funding_required.toLocaleString()}</div>
+                        <div className="flex items-center">
+                          <span className="text-purple-600 font-medium">
+                            AI Score: {project.ai_score ? `${project.ai_score}%` : 'Pending'}
+                          </span>
+                          <span className="ml-2 text-gray-400 text-xs">🤖</span>
+                        </div>
                       </div>
-                      <button
-                        onClick={() => handleVote(project.id)}
-                        className="px-4 py-2 bg-gradient-to-r from-pink-500 to-rose-400 
-                        text-white rounded-lg text-sm font-semibold transition-all hover:from-pink-600 
-                        hover:to-rose-500"
-                      >
-                        Vote ({userVotes[project.id] || 0})
-                      </button>
-                    </div>
 
-                    <div className="text-sm text-gray-500">
-                      Deadline:{" "}
-                      {new Date(project.deadline).toLocaleDateString()}
+                      {/* Voting Timer */}
+                      <div className="bg-gray-50 rounded-lg p-3">
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm font-medium text-gray-600">Time Left</span>
+                          <span className="text-sm font-bold text-blue-600">
+                            {getTimeLeft(project.votingEndTime)}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Voting Progress Bar */}
+                      <div className="relative h-4 bg-gray-100 rounded-full overflow-hidden">
+                        <div
+                          className="absolute left-0 h-full bg-green-500"
+                          style={{ width: `${project.forVotes / 100}%` }}
+                        />
+                        <div
+                          className="absolute right-0 h-full bg-red-500"
+                          style={{ width: `${project.againstVotes / 100}%` }}
+                        />
+                      </div>
+
+                      {/* Voting Stats */}
+                      <div className="flex justify-between text-sm text-gray-600">
+                        <span className="text-green-600 font-medium">
+                          Support: {((project.forVotes * 100) / (project.forVotes + project.againstVotes || 1)).toFixed(1)}%
+                        </span>
+                        <span className="text-gray-600">
+                          Participation: {(((project.forVotes + project.againstVotes) * 100) / 10000).toFixed(1)}%
+                        </span>
+                        <span className="text-red-600 font-medium">
+                          Against: {((project.againstVotes * 100) / (project.forVotes + project.againstVotes || 1)).toFixed(1)}%
+                        </span>
+                      </div>
+
+                      {/* Voting Buttons */}
+                      <div className="flex justify-between mt-4">
+                        <button
+                          onClick={() => handleVote(project, true)}
+                          className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
+                        >
+                          Support
+                        </button>
+                        <button
+                          onClick={() => handleVote(project, false)}
+                          className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
+                        >
+                          Reject
+                        </button>
+                      </div>
+
+                      {/* Voting Period */}
+                      {project.status === "Approved" && (
+                        <div className="mt-4 p-3 bg-gray-50 rounded-lg">
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm font-medium">
+                              Voting Period
+                            </span>
+                            <span
+                              className={`text-sm font-bold ${getVotingTimeStatus(project).color}`}
+                            >
+                              {getVotingTimeStatus(project).status}
+                            </span>
+                          </div>
+                          <div className="mt-2 h-2 bg-gray-200 rounded-full overflow-hidden">
+                            <div
+                              className={`h-full transition-all duration-500 ${
+                                getVotingTimeStatus(project).color.includes(
+                                  "red"
+                                )
+                                  ? "bg-red-500"
+                                  : getVotingTimeStatus(project).color.includes(
+                                        "yellow"
+                                      )
+                                    ? "bg-yellow-500"
+                                    : "bg-green-500"
+                              }`}
+                              style={{
+                                width: `${Math.max(
+                                  0,
+                                  Math.min(
+                                    100,
+                                    ((project.votingEndTime - Date.now()) /
+                                      (7 * 24 * 60 * 60 * 1000)) *
+                                      100
+                                  )
+                                )}%`,
+                              }}
+                            />
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
         </div>
