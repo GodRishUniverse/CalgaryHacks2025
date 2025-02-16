@@ -157,7 +157,7 @@ contract WildlifeDAO is Ownable {
         project.fundingRequired = fundingRequired;
         project.proposer = msg.sender;
         project.status = ProjectStatus.Pending;
-        project.submissionTime = block.timestamp;  // Record submission time
+        project.submissionTime = block.timestamp;
         project.validationCount = 0;
 
         proposalIdToProjectId[proposalId] = projectId;
@@ -212,10 +212,8 @@ contract WildlifeDAO is Ownable {
         uint256 wldToMint = _usdAmount * 10**18; // Convert to wei
         
         try wldToken.mintWLD(_recipient, wldToMint) {
-            // Update totals
             totalValueLocked += _usdAmount;
             totalWLD += wldToMint;
-
             emit DonationReceived(msg.sender, _usdAmount, wldToMint, 0);
         } catch Error(string memory reason) {
             revert(string(abi.encodePacked("Minting failed: ", reason)));

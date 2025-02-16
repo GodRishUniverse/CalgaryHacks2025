@@ -4,7 +4,7 @@ import { useForm, useFieldArray } from "react-hook-form";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { ethers } from "ethers";
-import { getWildlifeDAOContract } from "@/lib/contracts/WildlifeDAO";
+import { getProposalContract } from "@/lib/contracts/WildlifeDAO";
 import AuthGuard from "@/components/AuthGuard";
 import { useAuth } from "@/contexts/AuthContext";
 import { PlusCircleIcon, XCircleIcon } from "@heroicons/react/24/outline";
@@ -108,14 +108,12 @@ export default function SubmitProject() {
 
   const onSubmit = async (data: ProjectFormData) => {
     try {
-      console.log("Form submitted with data:", data);
-
       if (!user) {
         alert("Please login first");
         return;
       }
 
-      // Generate a unique proposal identifier
+      // Generate unique proposal ID
       const proposalId = `PROP-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
       // First save to Supabase
@@ -155,7 +153,7 @@ export default function SubmitProject() {
 
         const provider = new ethers.BrowserProvider(window.ethereum);
         const signer = await provider.getSigner();
-        const daoContract = await getWildlifeDAOContract(signer);
+        const daoContract = await getProposalContract(signer);
 
         console.log("Submitting to blockchain:", {
           proposalId,
@@ -164,42 +162,50 @@ export default function SubmitProject() {
           fundingRequired: data.fundingRequired,
         });
 
-        // Convert funding required to wei (assuming 18 decimals)
-        const fundingInWei = ethers.parseEther(data.fundingRequired.toString());
+        // Convert funding amount to wei (18 decimals)
+        const fundingInWei = ethers.parseUnits(
+          data.fundingRequired.toString(),
+          18
+        );
 
-        // Call the smart contract
+        // Call the smart contract's submitProject function
         const tx = await daoContract.submitProject(
           proposalId,
           data.title.trim(),
           data.description.trim(),
-          fundingInWei
+          fundingInWei,
+          { gasLimit: 500000 }
         );
 
         console.log("Transaction sent:", tx.hash);
 
-        // Wait for transaction confirmation
+        // Wait for confirmation and get receipt
         const receipt = await tx.wait();
         console.log("Transaction confirmed:", receipt);
 
-        // Look for ProposalSubmitted event
-        const event = receipt.logs.find(
-          (log: any) => log.eventName === "ProposalSubmitted"
-        );
+        // Get the project ID from the event
+        const event = receipt.logs.find((log) => {
+          try {
+            return (
+              daoContract.interface.parseLog(log)?.name === "ProposalSubmitted"
+            );
+          } catch (e) {
+            return false;
+          }
+        });
 
         if (!event) {
-          throw new Error("ProposalSubmitted event not found");
+          throw new Error("Could not find ProposalSubmitted event");
         }
 
-        // Update the Supabase record with blockchain status
-        const { error: updateError } = await supabase
+        // Update Supabase with blockchain status
+        await supabase
           .from("projects")
           .update({
             blockchain_status: "Submitted",
             contract_project_id: event.args?.projectId.toString(),
           })
           .eq("id", project.id);
-
-        if (updateError) throw updateError;
 
         alert("Project submitted successfully!");
         router.push(`/projects/${project.id}`);

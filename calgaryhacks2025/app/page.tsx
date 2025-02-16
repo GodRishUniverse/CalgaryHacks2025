@@ -12,6 +12,7 @@ import {
   WILDLIFE_DAO_ADDRESS,
   WILDLIFE_TOKEN_ADDRESS,
 } from "@/lib/contracts/WildlifeDAO";
+import { getDonationContract } from "@/lib/contracts/DonationABI";
 
 const TOP_PROJECTS = [
   {
@@ -112,31 +113,48 @@ export default function Home() {
         return;
       }
 
+      // First request account access
+      await window.ethereum.request({ method: "eth_requestAccounts" });
+
       const provider = new ethers.BrowserProvider(window.ethereum);
       const signer = await provider.getSigner();
-      const daoContract = await getWildlifeDAOContract(signer);
+      const donationContract = await getDonationContract(signer);
 
       console.log("Starting donation...");
       console.log("Amount:", amount);
-      console.log("Recipient:", await signer.getAddress());
+      console.log("Signer:", await signer.getAddress());
 
-      // Convert amount to wei (assuming amount is in whole units)
-      const amountInWei = ethers.parseUnits(amount.toString(), 0); // Changed to 0 decimals since we're using whole USD amounts
+      // First check if token contract has approved DAO
+      const tokenContract = await getWLDTokenContract(signer);
+      const daoAddress = await tokenContract.daoContract();
+      console.log("DAO address in token contract:", daoAddress);
+      console.log("Expected DAO address:", WILDLIFE_DAO_ADDRESS);
 
-      const tx = await daoContract.donate(
-        amount, // Use raw amount since contract expects USD amount
-        await signer.getAddress(),
-        { gasLimit: 300000 }
+      // Make the donation
+      const tx = await donationContract.donate(
+        amount, // USD amount
+        await signer.getAddress(), // recipient
+        {
+          gasLimit: 500000, // Increased gas limit
+        }
       );
 
       console.log("Transaction sent:", tx.hash);
       const receipt = await tx.wait();
       console.log("Transaction confirmed:", receipt);
 
-      alert("Donation successful!");
+      alert("Donation successful! You have received WLD tokens.");
     } catch (error: any) {
       console.error("Donation error:", error);
-      alert(`Donation failed: ${error.message}`);
+      if (error.message.includes("user rejected")) {
+        alert("Transaction was rejected in MetaMask. Please try again.");
+      } else if (error.message.includes("insufficient funds")) {
+        alert(
+          "Insufficient ETH for gas fees. Please add more ETH to your wallet."
+        );
+      } else {
+        alert(`Donation failed: ${error.message}`);
+      }
     }
   };
 
