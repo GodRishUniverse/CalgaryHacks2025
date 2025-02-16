@@ -9,6 +9,7 @@ export default function PaymentForm() {
   const [amount, setAmount] = useState<string>("");
   const [processing, setProcessing] = useState(false);
   const [tokenBalance, setTokenBalance] = useState<string>("0");
+  const [exchangeRate, setExchangeRate] = useState<number>(1);
 
   const fetchTokenBalance = async () => {
     try {
@@ -21,6 +22,7 @@ export default function PaymentForm() {
       
       try {
         const balance = await tokenContract.balanceOf(address);
+        // Format balance with proper decimals
         setTokenBalance(ethers.formatUnits(balance, 18));
       } catch (error) {
         console.error("Error fetching balance:", error);
@@ -28,6 +30,21 @@ export default function PaymentForm() {
       }
     } catch (error) {
       console.error("Error connecting to wallet:", error);
+    }
+  };
+
+  const fetchExchangeRate = async () => {
+    try {
+      if (!window.ethereum) return;
+      
+      const provider = new ethers.BrowserProvider(window.ethereum);
+      const signer = await provider.getSigner();
+      const daoContract = await getWildlifeDAOContract(signer);
+      
+      const rate = await daoContract.exchangeRate();
+      setExchangeRate(Number(rate));
+    } catch (error) {
+      console.error("Error fetching exchange rate:", error);
     }
   };
 
@@ -64,7 +81,7 @@ export default function PaymentForm() {
       );
 
       if (event) {
-        alert(`Successfully donated $${donationAmount} and received ${donationAmount * 100} WLD tokens!`);
+        alert(`Successfully donated $${donationAmount} and received ${donationAmount} WLD tokens!`);
         await fetchTokenBalance(); // Refresh balance after successful donation
       } else {
         throw new Error("Donation failed");
@@ -78,10 +95,18 @@ export default function PaymentForm() {
     }
   };
 
-  // Fetch balance when component mounts
+  // Fetch both balance and exchange rate when component mounts
   useEffect(() => {
     fetchTokenBalance();
+    fetchExchangeRate();
   }, []);
+
+  // Calculate WLD amount based on USD and current exchange rate
+  const calculateWLDAmount = (usdAmount: string): number => {
+    const amount = Number(usdAmount);
+    if (isNaN(amount)) return 0;
+    return amount * exchangeRate;
+  };
 
   return (
     <div className="max-w-md mx-auto">
@@ -92,17 +117,17 @@ export default function PaymentForm() {
       <div className="bg-white rounded-xl p-8 shadow-md border border-gray-200 hover:border-pink-300 transition-all">
         <div className="mb-6">
           <p className="text-sm text-gray-600">
-            Your WLD Balance: <span className="text-pink-500 font-medium">{tokenBalance} WLD</span>
+            Your WLD Balance: <span className="text-pink-500 font-medium">{Number(tokenBalance).toFixed(2)} WLD</span>
           </p>
         </div>
 
         <form onSubmit={handlePayment} className="space-y-6">
           <div>
-            <label className="block text-gray-700 mb-2 font-medium">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
               Donation Amount (USD)
             </label>
             <div className="relative">
-              <span className="absolute left-3 top-2 text-gray-500">$</span>
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
               <input
                 type="number"
                 min="1"
@@ -117,7 +142,9 @@ export default function PaymentForm() {
               />
             </div>
             <p className="text-sm text-gray-500 mt-2">
-              You will receive <span className="text-pink-500 font-medium">{amount ? Number(amount) * 100 : 0} WLD</span> tokens
+              You will receive <span className="text-pink-500 font-medium">
+                {calculateWLDAmount(amount)} WLD
+              </span> tokens
             </p>
           </div>
 

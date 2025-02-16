@@ -6,12 +6,20 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 
 contract WildlifeDAOToken is ERC20, Ownable {
     address public daoContract;
+    uint256 public constant MAX_SUPPLY = 1_000_000 * 10**18; // 1M total supply
+    uint256 public constant MAX_PER_DONATION = 1000 * 10**18; // Max 1000 tokens per donation
 
-    event TokensMinted(address indexed recipient, uint256 amount);
+    event TokensMinted(
+        address indexed recipient, 
+        uint256 amount, 
+        string purpose
+    );
 
     constructor() ERC20("WildlifeDAO Token", "WLD") Ownable(msg.sender) {
-        // Maybe we should mint some initial tokens to the owner
-        _mint(msg.sender, 1000000 * 10**decimals()); // Mint 1M tokens initially
+        // Initial distribution for demo:
+        // 100k to DAO treasury (deployer)
+        _mint(msg.sender, 100_000 * 10**18);
+        emit TokensMinted(msg.sender, 100_000, "Initial DAO Treasury");
     }
 
     function setDAOContract(address _daoContract) external onlyOwner {
@@ -23,8 +31,10 @@ contract WildlifeDAOToken is ERC20, Ownable {
         require(msg.sender == daoContract || msg.sender == owner(), "Not authorized to mint");
         require(recipient != address(0), "Invalid recipient address");
         require(amount > 0, "Mint amount must be greater than zero");
+        require(amount <= MAX_PER_DONATION, "Exceeds maximum tokens per donation");
+        require(totalSupply() + amount <= MAX_SUPPLY, "Exceeds max supply");
 
-        _mint(recipient, amount * 10**decimals()); // Convert to proper decimals
-        emit TokensMinted(recipient, amount);
+        _mint(recipient, amount * 10**decimals());
+        emit TokensMinted(recipient, amount, "Donation");
     }
 } 

@@ -26,6 +26,8 @@ import type {
 export interface WildlifeDAOTokenInterface extends Interface {
   getFunction(
     nameOrSignature:
+      | "MAX_PER_DONATION"
+      | "MAX_SUPPLY"
       | "allowance"
       | "approve"
       | "balanceOf"
@@ -51,6 +53,14 @@ export interface WildlifeDAOTokenInterface extends Interface {
       | "Transfer"
   ): EventFragment;
 
+  encodeFunctionData(
+    functionFragment: "MAX_PER_DONATION",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "MAX_SUPPLY",
+    values?: undefined
+  ): string;
   encodeFunctionData(
     functionFragment: "allowance",
     values: [AddressLike, AddressLike]
@@ -100,6 +110,11 @@ export interface WildlifeDAOTokenInterface extends Interface {
     values: [AddressLike]
   ): string;
 
+  decodeFunctionResult(
+    functionFragment: "MAX_PER_DONATION",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(functionFragment: "MAX_SUPPLY", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "allowance", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "approve", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "balanceOf", data: BytesLike): Result;
@@ -167,11 +182,20 @@ export namespace OwnershipTransferredEvent {
 }
 
 export namespace TokensMintedEvent {
-  export type InputTuple = [recipient: AddressLike, amount: BigNumberish];
-  export type OutputTuple = [recipient: string, amount: bigint];
+  export type InputTuple = [
+    recipient: AddressLike,
+    amount: BigNumberish,
+    purpose: string
+  ];
+  export type OutputTuple = [
+    recipient: string,
+    amount: bigint,
+    purpose: string
+  ];
   export interface OutputObject {
     recipient: string;
     amount: bigint;
+    purpose: string;
   }
   export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
   export type Filter = TypedDeferredTopicFilter<Event>;
@@ -240,6 +264,10 @@ export interface WildlifeDAOToken extends BaseContract {
     event?: TCEvent
   ): Promise<this>;
 
+  MAX_PER_DONATION: TypedContractMethod<[], [bigint], "view">;
+
+  MAX_SUPPLY: TypedContractMethod<[], [bigint], "view">;
+
   allowance: TypedContractMethod<
     [owner: AddressLike, spender: AddressLike],
     [bigint],
@@ -302,6 +330,12 @@ export interface WildlifeDAOToken extends BaseContract {
     key: string | FunctionFragment
   ): T;
 
+  getFunction(
+    nameOrSignature: "MAX_PER_DONATION"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "MAX_SUPPLY"
+  ): TypedContractMethod<[], [bigint], "view">;
   getFunction(
     nameOrSignature: "allowance"
   ): TypedContractMethod<
@@ -420,7 +454,7 @@ export interface WildlifeDAOToken extends BaseContract {
       OwnershipTransferredEvent.OutputObject
     >;
 
-    "TokensMinted(address,uint256)": TypedContractEvent<
+    "TokensMinted(address,uint256,string)": TypedContractEvent<
       TokensMintedEvent.InputTuple,
       TokensMintedEvent.OutputTuple,
       TokensMintedEvent.OutputObject

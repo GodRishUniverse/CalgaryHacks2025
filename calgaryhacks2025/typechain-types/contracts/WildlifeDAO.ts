@@ -26,20 +26,65 @@ import type {
 export interface WildlifeDAOInterface extends Interface {
   getFunction(
     nameOrSignature:
+      | "DAO_FEE"
+      | "MAX_DONATION"
+      | "MIN_DONATION"
+      | "MIN_VOTE_POWER"
+      | "VOTE_COST"
+      | "VOTE_DURATION"
+      | "addValidator"
       | "donate"
       | "exchangeRate"
+      | "minValidationsRequired"
       | "owner"
+      | "projectCount"
+      | "projects"
+      | "rejectProject"
+      | "removeValidator"
       | "renounceOwnership"
+      | "submitProject"
       | "totalValueLocked"
       | "totalWLD"
       | "transferOwnership"
+      | "validateProject"
+      | "validators"
+      | "voteOnProject"
       | "wldToken"
   ): FunctionFragment;
 
   getEvent(
-    nameOrSignatureOrTopic: "DonationReceived" | "OwnershipTransferred"
+    nameOrSignatureOrTopic:
+      | "DonationReceived"
+      | "OwnershipTransferred"
+      | "ProjectStatusUpdated"
+      | "ProjectSubmitted"
+      | "ProjectValidated"
+      | "ValidatorAdded"
+      | "ValidatorRemoved"
   ): EventFragment;
 
+  encodeFunctionData(functionFragment: "DAO_FEE", values?: undefined): string;
+  encodeFunctionData(
+    functionFragment: "MAX_DONATION",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "MIN_DONATION",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "MIN_VOTE_POWER",
+    values?: undefined
+  ): string;
+  encodeFunctionData(functionFragment: "VOTE_COST", values?: undefined): string;
+  encodeFunctionData(
+    functionFragment: "VOTE_DURATION",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "addValidator",
+    values: [AddressLike]
+  ): string;
   encodeFunctionData(
     functionFragment: "donate",
     values: [BigNumberish, AddressLike]
@@ -48,10 +93,34 @@ export interface WildlifeDAOInterface extends Interface {
     functionFragment: "exchangeRate",
     values?: undefined
   ): string;
+  encodeFunctionData(
+    functionFragment: "minValidationsRequired",
+    values?: undefined
+  ): string;
   encodeFunctionData(functionFragment: "owner", values?: undefined): string;
+  encodeFunctionData(
+    functionFragment: "projectCount",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "projects",
+    values: [BigNumberish]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "rejectProject",
+    values: [BigNumberish]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "removeValidator",
+    values: [AddressLike]
+  ): string;
   encodeFunctionData(
     functionFragment: "renounceOwnership",
     values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "submitProject",
+    values: [string, string, BigNumberish]
   ): string;
   encodeFunctionData(
     functionFragment: "totalValueLocked",
@@ -62,16 +131,71 @@ export interface WildlifeDAOInterface extends Interface {
     functionFragment: "transferOwnership",
     values: [AddressLike]
   ): string;
+  encodeFunctionData(
+    functionFragment: "validateProject",
+    values: [BigNumberish]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "validators",
+    values: [AddressLike]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "voteOnProject",
+    values: [BigNumberish, boolean]
+  ): string;
   encodeFunctionData(functionFragment: "wldToken", values?: undefined): string;
 
+  decodeFunctionResult(functionFragment: "DAO_FEE", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "MAX_DONATION",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "MIN_DONATION",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "MIN_VOTE_POWER",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(functionFragment: "VOTE_COST", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "VOTE_DURATION",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "addValidator",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(functionFragment: "donate", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "exchangeRate",
     data: BytesLike
   ): Result;
+  decodeFunctionResult(
+    functionFragment: "minValidationsRequired",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(functionFragment: "owner", data: BytesLike): Result;
   decodeFunctionResult(
+    functionFragment: "projectCount",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(functionFragment: "projects", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "rejectProject",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "removeValidator",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
     functionFragment: "renounceOwnership",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "submitProject",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -83,6 +207,15 @@ export interface WildlifeDAOInterface extends Interface {
     functionFragment: "transferOwnership",
     data: BytesLike
   ): Result;
+  decodeFunctionResult(
+    functionFragment: "validateProject",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(functionFragment: "validators", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "voteOnProject",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(functionFragment: "wldToken", data: BytesLike): Result;
 }
 
@@ -90,17 +223,20 @@ export namespace DonationReceivedEvent {
   export type InputTuple = [
     donor: AddressLike,
     usdAmount: BigNumberish,
-    wldMinted: BigNumberish
+    wldMinted: BigNumberish,
+    daoFeeAmount: BigNumberish
   ];
   export type OutputTuple = [
     donor: string,
     usdAmount: bigint,
-    wldMinted: bigint
+    wldMinted: bigint,
+    daoFeeAmount: bigint
   ];
   export interface OutputObject {
     donor: string;
     usdAmount: bigint;
     wldMinted: bigint;
+    daoFeeAmount: bigint;
   }
   export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
   export type Filter = TypedDeferredTopicFilter<Event>;
@@ -114,6 +250,90 @@ export namespace OwnershipTransferredEvent {
   export interface OutputObject {
     previousOwner: string;
     newOwner: string;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
+}
+
+export namespace ProjectStatusUpdatedEvent {
+  export type InputTuple = [projectId: BigNumberish, newStatus: BigNumberish];
+  export type OutputTuple = [projectId: bigint, newStatus: bigint];
+  export interface OutputObject {
+    projectId: bigint;
+    newStatus: bigint;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
+}
+
+export namespace ProjectSubmittedEvent {
+  export type InputTuple = [
+    projectId: BigNumberish,
+    proposer: AddressLike,
+    title: string,
+    fundingRequired: BigNumberish
+  ];
+  export type OutputTuple = [
+    projectId: bigint,
+    proposer: string,
+    title: string,
+    fundingRequired: bigint
+  ];
+  export interface OutputObject {
+    projectId: bigint;
+    proposer: string;
+    title: string;
+    fundingRequired: bigint;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
+}
+
+export namespace ProjectValidatedEvent {
+  export type InputTuple = [
+    projectId: BigNumberish,
+    validator: AddressLike,
+    currentValidations: BigNumberish
+  ];
+  export type OutputTuple = [
+    projectId: bigint,
+    validator: string,
+    currentValidations: bigint
+  ];
+  export interface OutputObject {
+    projectId: bigint;
+    validator: string;
+    currentValidations: bigint;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
+}
+
+export namespace ValidatorAddedEvent {
+  export type InputTuple = [validator: AddressLike];
+  export type OutputTuple = [validator: string];
+  export interface OutputObject {
+    validator: string;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
+}
+
+export namespace ValidatorRemovedEvent {
+  export type InputTuple = [validator: AddressLike];
+  export type OutputTuple = [validator: string];
+  export interface OutputObject {
+    validator: string;
   }
   export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
   export type Filter = TypedDeferredTopicFilter<Event>;
@@ -164,6 +384,24 @@ export interface WildlifeDAO extends BaseContract {
     event?: TCEvent
   ): Promise<this>;
 
+  DAO_FEE: TypedContractMethod<[], [bigint], "view">;
+
+  MAX_DONATION: TypedContractMethod<[], [bigint], "view">;
+
+  MIN_DONATION: TypedContractMethod<[], [bigint], "view">;
+
+  MIN_VOTE_POWER: TypedContractMethod<[], [bigint], "view">;
+
+  VOTE_COST: TypedContractMethod<[], [bigint], "view">;
+
+  VOTE_DURATION: TypedContractMethod<[], [bigint], "view">;
+
+  addValidator: TypedContractMethod<
+    [validator: AddressLike],
+    [void],
+    "nonpayable"
+  >;
+
   donate: TypedContractMethod<
     [_usdAmount: BigNumberish, _recipient: AddressLike],
     [void],
@@ -172,9 +410,59 @@ export interface WildlifeDAO extends BaseContract {
 
   exchangeRate: TypedContractMethod<[], [bigint], "view">;
 
+  minValidationsRequired: TypedContractMethod<[], [bigint], "view">;
+
   owner: TypedContractMethod<[], [string], "view">;
 
+  projectCount: TypedContractMethod<[], [bigint], "view">;
+
+  projects: TypedContractMethod<
+    [arg0: BigNumberish],
+    [
+      [
+        string,
+        string,
+        string,
+        bigint,
+        bigint,
+        bigint,
+        bigint,
+        bigint,
+        bigint
+      ] & {
+        title: string;
+        description: string;
+        proposer: string;
+        fundingRequired: bigint;
+        validationCount: bigint;
+        status: bigint;
+        forVotes: bigint;
+        againstVotes: bigint;
+        votingEndTime: bigint;
+      }
+    ],
+    "view"
+  >;
+
+  rejectProject: TypedContractMethod<
+    [projectId: BigNumberish],
+    [void],
+    "nonpayable"
+  >;
+
+  removeValidator: TypedContractMethod<
+    [validator: AddressLike],
+    [void],
+    "nonpayable"
+  >;
+
   renounceOwnership: TypedContractMethod<[], [void], "nonpayable">;
+
+  submitProject: TypedContractMethod<
+    [title: string, description: string, fundingRequired: BigNumberish],
+    [void],
+    "nonpayable"
+  >;
 
   totalValueLocked: TypedContractMethod<[], [bigint], "view">;
 
@@ -186,12 +474,47 @@ export interface WildlifeDAO extends BaseContract {
     "nonpayable"
   >;
 
+  validateProject: TypedContractMethod<
+    [projectId: BigNumberish],
+    [void],
+    "nonpayable"
+  >;
+
+  validators: TypedContractMethod<[arg0: AddressLike], [boolean], "view">;
+
+  voteOnProject: TypedContractMethod<
+    [projectId: BigNumberish, support: boolean],
+    [void],
+    "nonpayable"
+  >;
+
   wldToken: TypedContractMethod<[], [string], "view">;
 
   getFunction<T extends ContractMethod = ContractMethod>(
     key: string | FunctionFragment
   ): T;
 
+  getFunction(
+    nameOrSignature: "DAO_FEE"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "MAX_DONATION"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "MIN_DONATION"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "MIN_VOTE_POWER"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "VOTE_COST"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "VOTE_DURATION"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "addValidator"
+  ): TypedContractMethod<[validator: AddressLike], [void], "nonpayable">;
   getFunction(
     nameOrSignature: "donate"
   ): TypedContractMethod<
@@ -203,11 +526,59 @@ export interface WildlifeDAO extends BaseContract {
     nameOrSignature: "exchangeRate"
   ): TypedContractMethod<[], [bigint], "view">;
   getFunction(
+    nameOrSignature: "minValidationsRequired"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
     nameOrSignature: "owner"
   ): TypedContractMethod<[], [string], "view">;
   getFunction(
+    nameOrSignature: "projectCount"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "projects"
+  ): TypedContractMethod<
+    [arg0: BigNumberish],
+    [
+      [
+        string,
+        string,
+        string,
+        bigint,
+        bigint,
+        bigint,
+        bigint,
+        bigint,
+        bigint
+      ] & {
+        title: string;
+        description: string;
+        proposer: string;
+        fundingRequired: bigint;
+        validationCount: bigint;
+        status: bigint;
+        forVotes: bigint;
+        againstVotes: bigint;
+        votingEndTime: bigint;
+      }
+    ],
+    "view"
+  >;
+  getFunction(
+    nameOrSignature: "rejectProject"
+  ): TypedContractMethod<[projectId: BigNumberish], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "removeValidator"
+  ): TypedContractMethod<[validator: AddressLike], [void], "nonpayable">;
+  getFunction(
     nameOrSignature: "renounceOwnership"
   ): TypedContractMethod<[], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "submitProject"
+  ): TypedContractMethod<
+    [title: string, description: string, fundingRequired: BigNumberish],
+    [void],
+    "nonpayable"
+  >;
   getFunction(
     nameOrSignature: "totalValueLocked"
   ): TypedContractMethod<[], [bigint], "view">;
@@ -217,6 +588,19 @@ export interface WildlifeDAO extends BaseContract {
   getFunction(
     nameOrSignature: "transferOwnership"
   ): TypedContractMethod<[newOwner: AddressLike], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "validateProject"
+  ): TypedContractMethod<[projectId: BigNumberish], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "validators"
+  ): TypedContractMethod<[arg0: AddressLike], [boolean], "view">;
+  getFunction(
+    nameOrSignature: "voteOnProject"
+  ): TypedContractMethod<
+    [projectId: BigNumberish, support: boolean],
+    [void],
+    "nonpayable"
+  >;
   getFunction(
     nameOrSignature: "wldToken"
   ): TypedContractMethod<[], [string], "view">;
@@ -235,9 +619,44 @@ export interface WildlifeDAO extends BaseContract {
     OwnershipTransferredEvent.OutputTuple,
     OwnershipTransferredEvent.OutputObject
   >;
+  getEvent(
+    key: "ProjectStatusUpdated"
+  ): TypedContractEvent<
+    ProjectStatusUpdatedEvent.InputTuple,
+    ProjectStatusUpdatedEvent.OutputTuple,
+    ProjectStatusUpdatedEvent.OutputObject
+  >;
+  getEvent(
+    key: "ProjectSubmitted"
+  ): TypedContractEvent<
+    ProjectSubmittedEvent.InputTuple,
+    ProjectSubmittedEvent.OutputTuple,
+    ProjectSubmittedEvent.OutputObject
+  >;
+  getEvent(
+    key: "ProjectValidated"
+  ): TypedContractEvent<
+    ProjectValidatedEvent.InputTuple,
+    ProjectValidatedEvent.OutputTuple,
+    ProjectValidatedEvent.OutputObject
+  >;
+  getEvent(
+    key: "ValidatorAdded"
+  ): TypedContractEvent<
+    ValidatorAddedEvent.InputTuple,
+    ValidatorAddedEvent.OutputTuple,
+    ValidatorAddedEvent.OutputObject
+  >;
+  getEvent(
+    key: "ValidatorRemoved"
+  ): TypedContractEvent<
+    ValidatorRemovedEvent.InputTuple,
+    ValidatorRemovedEvent.OutputTuple,
+    ValidatorRemovedEvent.OutputObject
+  >;
 
   filters: {
-    "DonationReceived(address,uint256,uint256)": TypedContractEvent<
+    "DonationReceived(address,uint256,uint256,uint256)": TypedContractEvent<
       DonationReceivedEvent.InputTuple,
       DonationReceivedEvent.OutputTuple,
       DonationReceivedEvent.OutputObject
@@ -257,6 +676,61 @@ export interface WildlifeDAO extends BaseContract {
       OwnershipTransferredEvent.InputTuple,
       OwnershipTransferredEvent.OutputTuple,
       OwnershipTransferredEvent.OutputObject
+    >;
+
+    "ProjectStatusUpdated(uint256,uint8)": TypedContractEvent<
+      ProjectStatusUpdatedEvent.InputTuple,
+      ProjectStatusUpdatedEvent.OutputTuple,
+      ProjectStatusUpdatedEvent.OutputObject
+    >;
+    ProjectStatusUpdated: TypedContractEvent<
+      ProjectStatusUpdatedEvent.InputTuple,
+      ProjectStatusUpdatedEvent.OutputTuple,
+      ProjectStatusUpdatedEvent.OutputObject
+    >;
+
+    "ProjectSubmitted(uint256,address,string,uint256)": TypedContractEvent<
+      ProjectSubmittedEvent.InputTuple,
+      ProjectSubmittedEvent.OutputTuple,
+      ProjectSubmittedEvent.OutputObject
+    >;
+    ProjectSubmitted: TypedContractEvent<
+      ProjectSubmittedEvent.InputTuple,
+      ProjectSubmittedEvent.OutputTuple,
+      ProjectSubmittedEvent.OutputObject
+    >;
+
+    "ProjectValidated(uint256,address,uint256)": TypedContractEvent<
+      ProjectValidatedEvent.InputTuple,
+      ProjectValidatedEvent.OutputTuple,
+      ProjectValidatedEvent.OutputObject
+    >;
+    ProjectValidated: TypedContractEvent<
+      ProjectValidatedEvent.InputTuple,
+      ProjectValidatedEvent.OutputTuple,
+      ProjectValidatedEvent.OutputObject
+    >;
+
+    "ValidatorAdded(address)": TypedContractEvent<
+      ValidatorAddedEvent.InputTuple,
+      ValidatorAddedEvent.OutputTuple,
+      ValidatorAddedEvent.OutputObject
+    >;
+    ValidatorAdded: TypedContractEvent<
+      ValidatorAddedEvent.InputTuple,
+      ValidatorAddedEvent.OutputTuple,
+      ValidatorAddedEvent.OutputObject
+    >;
+
+    "ValidatorRemoved(address)": TypedContractEvent<
+      ValidatorRemovedEvent.InputTuple,
+      ValidatorRemovedEvent.OutputTuple,
+      ValidatorRemovedEvent.OutputObject
+    >;
+    ValidatorRemoved: TypedContractEvent<
+      ValidatorRemovedEvent.InputTuple,
+      ValidatorRemovedEvent.OutputTuple,
+      ValidatorRemovedEvent.OutputObject
     >;
   };
 }
