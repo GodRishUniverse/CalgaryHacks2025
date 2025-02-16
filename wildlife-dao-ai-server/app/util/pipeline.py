@@ -5,10 +5,21 @@ from langchain.schema.runnable import RunnableSequence
 from langchain_openai import ChatOpenAI
 from langchain_google_community import GoogleSearchAPIWrapper
 from langchain.output_parsers import CommaSeparatedListOutputParser
+from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain_chroma import Chroma
 from app.util.web_scrape import format_search_query
 from dotenv import load_dotenv
 
+import openai 
+from langchain.embeddings.openai import OpenAIEmbeddings
+
+import os
+
+# pip install langchain-community chromadb
+
 load_dotenv()
+
+VECTOR_DB_DIR = "chroma_db" # Vector DB settings
 
 MAX_SEARCH_RESULTS = 3
 
@@ -77,6 +88,28 @@ keyword_chain = RunnableSequence(
     keyword_prompt | ChatOpenAI(temperature=0.2, model="gpt-4o-mini") | keyword_parser
 )
 
+# Setup for vector database
+embeddings = OpenAIEmbeddings()
+
+# Initialize or load the vector database
+def get_vectorstore():
+    if os.path.exists(VECTOR_DB_DIR):
+        return Chroma(persist_directory=VECTOR_DB_DIR, embedding_function=embeddings)
+    else:
+        # Create an empty database if it doesn't exist
+        db = Chroma(persist_directory=VECTOR_DB_DIR, embedding_function=embeddings)
+        db.persist()
+        return db
+
+# Function to add new documents to the vector database
+def add_to_vectorstore(texts, metadatas=None):
+    text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
+    docs = text_splitter.create_documents(texts, metadatas)
+    
+    db = get_vectorstore()
+    db.add_documents(docs)
+    db.persist()
+
 search = GoogleSearchAPIWrapper()
 
 scoring_prompt = PromptTemplate.from_template(SCORING_TEMPLATE)
@@ -96,6 +129,18 @@ scoring_chain = (
 )
 
 
+# Function to query vector database
+def query_vectorstore(query, n_results=3):
+    db = get_vectorstore()
+    docs = db.similarity_search(query, k=n_results)
+    return [doc.page_content for doc in docs]
+
+# Fallback to web search if vector DB doesn't have enough relevant info
+def search_conservation_data(keywords):
+    query = f"wildlife conservation recent data {', '.join(keywords)}"
+    return search.results(query, MAX_SEARCH_RESULTS)
+
+
 def search_conservation_data(keywords):
     query = f"wildlife conservation recent data {', '.join(keywords)}"
     return search.results(query, MAX_SEARCH_RESULTS)
@@ -109,12 +154,27 @@ def full_pipeline(project_text):
     if "insufficient" in keywords:
         return {"final_score": 0, "score_breakdown": {}}
 
-    search_results = search_conservation_data(keywords)
+    # First try to get results from vector database
+    db_query = f"wildlife conservation {', '.join(keywords)}"
+    db_results = query_vectorstore(db_query)
+    
+    # If not enough results from DB, fall back to web search
+    if len(db_results) < 2:
+        search_results = search_conservation_data(keywords)
+        formatted_results = format_search_query(search_results)
+        
+        # Add these web results to our vector database for future use
+        if formatted_results:
+            add_to_vectorstore([formatted_results])
+            
+        db_results = formatted_results
+    else:
+        db_results = "\n\n".join(db_results)
 
     score_response = scoring_chain.invoke(
         {
             "project_text": project_text,
-            "search_results": format_search_query(search_results),
+            "search_results": db_results,
         }
     )
 
