@@ -12,27 +12,37 @@ load_dotenv()
 
 MAX_SEARCH_RESULTS = 3
 
-KEYWORD_TEMPLATE = """Identify 20-30 specific keywords or topics from this wildlife conservation project text and only the project text that would help find relevant scientific papers or conservation reports.
-Focus on:
-- Species names
-- Conservation techniques
-- Geographic locations
-- Ecological challenges
+KEYWORD_TEMPLATE = """Identify 5-7 specific keywords or topics from this wildlife conservation project text and only the project text that would help find relevant scientific papers or conservation reports.
 
-Return ONLY a comma-separated list, no commentary.
-When you have insufficient information, enter 'insufficient'. Generally when there is insufficient information, it will not be descriptive (like only a few sentences is insufficient - keyword count will be higher than actual project proposal). Make sure to analyze it using the content and the context.
+Focus on extracting keywords from these categories:
+- Species names (e.g., "Panthera tigris", "sea turtles")
+- Conservation techniques (e.g., "captive breeding", "habitat restoration")
+- Geographic locations (e.g., "Amazon Rainforest", "Great Barrier Reef")
+- Ecological challenges (e.g., "deforestation", "climate change impact")
 
+**Insufficiency Check**: 
+If the text lacks **at least two distinct categories from the list above**, return **'insufficient'** instead of extracting keywords. Generally, a text is insufficient if it is short (a few sentences) or lacks specific conservation details.
 
-A sample project format is as follows:
+**Output Format:**  
+Return ONLY a comma-separated list, no commentary. If insufficient, return `'insufficient'`.
 
-Project Title:
-Executive Summary:
-Problem Statement
-Methodology:
-Budget:
-Evaluation:
+---
 
-This is the Project Proposal to evaluate:
+**Example of Sufficient Input:**
+*"The snow leopard (Panthera uncia) faces habitat loss in the Himalayas due to deforestation and climate change. Conservationists are implementing anti-poaching patrols and habitat restoration projects."*
+**Output:**  
+`Panthera uncia, Himalayas, habitat loss, climate change, anti-poaching patrols, habitat restoration`
+
+---
+
+**Example of Insufficient Input:**
+*"Polar bears are endangered due to climate change."*  
+**Output:**  
+`insufficient`
+
+---
+
+This is the Project Text to evaluate:  
 {project_text}
 
 {format_instructions}"""
