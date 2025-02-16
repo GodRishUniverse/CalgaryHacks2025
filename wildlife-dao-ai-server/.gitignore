@@ -1,0 +1,9 @@
+.venv/
+.venv
+.env
+Pipfile
+Pipfile.lock
+test.py
+request.rest
+__pycache__/
+chroma_db/
