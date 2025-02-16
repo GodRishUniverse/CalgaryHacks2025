@@ -1,5 +1,5 @@
-import json
 import os
+import json
 from pathlib import Path
 from langchain.schema import StrOutputParser
 from langchain.prompts import PromptTemplate
@@ -17,9 +17,13 @@ from langchain_openai import OpenAIEmbeddings
 
 load_dotenv()
 
-VECTOR_DB_DIR = Path("./chroma_db").resolve()  # Vector DB settings
+VECTOR_DB_DIR = str(
+    Path(os.environ.get("VECTOR_DB_DIR", "./chroma_db")).resolve()
+)  # Vector DB settings
 
 MAX_SEARCH_RESULTS = 3
+
+MINIMUM_DATABASE_THRESHOLD = 2
 
 KEYWORD_TEMPLATE = """Identify 5-7 specific keywords or topics from this wildlife conservation project text and only the project text that would help find relevant scientific papers or conservation reports.
 
@@ -92,13 +96,7 @@ embeddings = OpenAIEmbeddings()
 
 # Initialize or load the vector database
 def get_vectorstore():
-    if os.path.exists(VECTOR_DB_DIR):
-        return Chroma(persist_directory=VECTOR_DB_DIR, embedding_function=embeddings)
-    else:
-        # Create an empty database if it doesn't exist
-        db = Chroma(persist_directory=VECTOR_DB_DIR, embedding_function=embeddings)
-        db.persist()
-        return db
+    return Chroma(persist_directory=VECTOR_DB_DIR, embedding_function=embeddings)
 
 
 # Function to add new documents to the vector database
@@ -108,7 +106,6 @@ def add_to_vectorstore(texts, metadatas=None):
 
     db = get_vectorstore()
     db.add_documents(docs)
-    db.persist()
 
 
 search = GoogleSearchAPIWrapper()
@@ -161,7 +158,7 @@ def full_pipeline(project_text):
     db_results = query_vectorstore(db_query)
 
     # If not enough results from DB, fall back to web search
-    if len(db_results) < 2:
+    if len(db_results) < MINIMUM_DATABASE_THRESHOLD:
         search_results = search_conservation_data(keywords)
         formatted_results = format_search_query(search_results)
 
