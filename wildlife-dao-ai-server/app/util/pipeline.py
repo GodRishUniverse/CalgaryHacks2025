@@ -12,7 +12,7 @@ load_dotenv()
 
 MAX_SEARCH_RESULTS = 3
 
-KEYWORD_TEMPLATE = """Identify 30-50 specific keywords or topics from this wildlife conservation project text and only the project text that would help find relevant scientific papers or conservation reports.
+KEYWORD_TEMPLATE = """Identify 20-30 specific keywords or topics from this wildlife conservation project text and only the project text that would help find relevant scientific papers or conservation reports.
 Focus on:
 - Species names
 - Conservation techniques
@@ -92,6 +92,8 @@ def search_conservation_data(keywords):
 
 
 def full_pipeline(project_text):
+    words = project_text.split()
+    project_text = " ".join(words[:400])
     keywords = keyword_chain.invoke({"project_text": project_text})
 
     if "insufficient" in keywords:
