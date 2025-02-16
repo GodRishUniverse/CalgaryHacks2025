@@ -28,17 +28,19 @@ export default function UserProposalsPage() {
 
   const fetchUserProposals = async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       if (!user) {
         router.push("/login");
         return;
       }
 
       const { data, error } = await supabase
-        .from('projects')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
+        .from("projects")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false });
 
       if (error) throw error;
       setProposals(data || []);
@@ -51,16 +53,16 @@ export default function UserProposalsPage() {
 
   const getStatusColor = (status: string) => {
     switch (status?.toLowerCase()) {
-      case 'pending':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'approved':
-        return 'bg-green-100 text-green-800';
-      case 'rejected':
-        return 'bg-red-100 text-red-800';
-      case 'awaiting review':
-        return 'bg-blue-100 text-blue-800';
+      case "pending":
+        return "bg-yellow-100 text-yellow-800";
+      case "approved":
+        return "bg-green-100 text-green-800";
+      case "rejected":
+        return "bg-red-100 text-red-800";
+      case "awaiting review":
+        return "bg-blue-100 text-blue-800";
       default:
-        return 'bg-gray-100 text-gray-800';
+        return "bg-gray-100 text-gray-800";
     }
   };
 
@@ -70,9 +72,11 @@ export default function UserProposalsPage() {
         <div className="container mx-auto px-4 py-8">
           <div className="max-w-4xl mx-auto">
             <div className="flex justify-between items-center mb-8">
-              <h1 className="text-3xl font-bold text-gray-900">Your Proposals</h1>
+              <h1 className="text-3xl font-bold text-gray-900">
+                Your Proposals
+              </h1>
               <button
-                onClick={() => router.push('/projects/submit')}
+                onClick={() => router.push("/projects/submit")}
                 className="px-4 py-2 bg-gradient-to-r from-pink-500 to-rose-400 
                 text-white rounded-lg font-semibold transition-all hover:scale-105"
               >
@@ -102,11 +106,15 @@ export default function UserProposalsPage() {
                         </p>
                       </div>
                       <div className="flex gap-2">
-                        <span className={`px-3 py-1 rounded-full text-sm ${getStatusColor(proposal.validation_status)}`}>
+                        <span
+                          className={`px-3 py-1 rounded-full text-sm ${getStatusColor(proposal.validation_status)}`}
+                        >
                           {proposal.validation_status}
                         </span>
                         {proposal.blockchain_status && (
-                          <span className={`px-3 py-1 rounded-full text-sm ${getStatusColor(proposal.blockchain_status)}`}>
+                          <span
+                            className={`px-3 py-1 rounded-full text-sm ${getStatusColor(proposal.blockchain_status)}`}
+                          >
                             {proposal.blockchain_status}
                           </span>
                         )}
@@ -120,7 +128,8 @@ export default function UserProposalsPage() {
                         ${proposal.funding_required.toLocaleString()} Requested
                       </span>
                       <span className="text-gray-500">
-                        Submitted on {new Date(proposal.created_at).toLocaleDateString()}
+                        Submitted on{" "}
+                        {new Date(proposal.created_at).toLocaleDateString()}
                       </span>
                     </div>
 
@@ -141,10 +150,11 @@ export default function UserProposalsPage() {
                   No Proposals Yet
                 </h3>
                 <p className="text-gray-600 mb-6">
-                  Start your conservation journey by submitting your first proposal.
+                  Start your conservation journey by submitting your first
+                  proposal.
                 </p>
                 <button
-                  onClick={() => router.push('/projects/submit')}
+                  onClick={() => router.push("/projects/submit")}
                   className="px-6 py-3 bg-gradient-to-r from-pink-500 to-rose-400 
                   text-white rounded-lg font-semibold transition-all hover:scale-105"
                 >
@@ -157,4 +167,4 @@ export default function UserProposalsPage() {
       </div>
     </AuthGuard>
   );
-} 
+}

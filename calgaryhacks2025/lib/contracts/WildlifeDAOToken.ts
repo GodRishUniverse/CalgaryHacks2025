@@ -1,8 +1,7 @@
 import { ethers } from "ethers";
 
 // Update with the new token address
-export const WILDLIFE_TOKEN_ADDRESS =
-  "0x0091524C5C7DBA5b1b418390E23c468D2d99b54D";
+export const WILDLIFE_TOKEN_ADDRESS = "0xEee63a8CB5ee79d5931FaBf6f5FE8470371ee556";
 
 export const WLD_TOKEN_ABI = [
   "function balanceOf(address) external view returns (uint256)",

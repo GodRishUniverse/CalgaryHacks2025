@@ -26,37 +26,26 @@ import type {
 export interface WildlifeDAOInterface extends Interface {
   getFunction(
     nameOrSignature:
-      | "AUTO_VALIDATION_PERIOD"
       | "DAO_FEE"
       | "MAX_DONATION"
       | "MIN_DONATION"
       | "MIN_VOTE_POWER"
       | "VOTE_COST"
       | "VOTING_PERIOD"
-      | "addValidator"
-      | "calculateVoteCost"
-      | "checkAndAutoValidate"
+      | "checkVoteEligibility"
+      | "debugProjectStatus"
       | "donate"
       | "exchangeRate"
-      | "getProjectByProposalId"
-      | "getProjectVotes"
-      | "getProposalStatus"
-      | "hasVoted"
-      | "minValidationsRequired"
+      | "getProjectState"
       | "owner"
       | "projectCount"
       | "projects"
       | "proposalIdToProjectId"
-      | "quadraticContribute"
-      | "rejectProject"
-      | "removeValidator"
       | "renounceOwnership"
       | "submitProject"
       | "totalValueLocked"
       | "totalWLD"
       | "transferOwnership"
-      | "validateProject"
-      | "validators"
       | "voteOnProject"
       | "wldToken"
   ): FunctionFragment;
@@ -65,21 +54,11 @@ export interface WildlifeDAOInterface extends Interface {
     nameOrSignatureOrTopic:
       | "DonationReceived"
       | "OwnershipTransferred"
-      | "ProjectContribution"
       | "ProjectStatusChanged"
-      | "ProjectStatusUpdated"
-      | "ProjectSubmitted"
-      | "ProjectValidated"
       | "ProposalSubmitted"
-      | "ValidatorAdded"
-      | "ValidatorRemoved"
       | "VoteCast"
   ): EventFragment;
 
-  encodeFunctionData(
-    functionFragment: "AUTO_VALIDATION_PERIOD",
-    values?: undefined
-  ): string;
   encodeFunctionData(functionFragment: "DAO_FEE", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "MAX_DONATION",
@@ -99,15 +78,11 @@ export interface WildlifeDAOInterface extends Interface {
     values?: undefined
   ): string;
   encodeFunctionData(
-    functionFragment: "addValidator",
-    values: [AddressLike]
+    functionFragment: "checkVoteEligibility",
+    values: [BigNumberish, AddressLike]
   ): string;
   encodeFunctionData(
-    functionFragment: "calculateVoteCost",
-    values: [BigNumberish]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "checkAndAutoValidate",
+    functionFragment: "debugProjectStatus",
     values: [BigNumberish]
   ): string;
   encodeFunctionData(
@@ -119,24 +94,8 @@ export interface WildlifeDAOInterface extends Interface {
     values?: undefined
   ): string;
   encodeFunctionData(
-    functionFragment: "getProjectByProposalId",
-    values: [string]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "getProjectVotes",
+    functionFragment: "getProjectState",
     values: [BigNumberish]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "getProposalStatus",
-    values: [string]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "hasVoted",
-    values: [BigNumberish, AddressLike]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "minValidationsRequired",
-    values?: undefined
   ): string;
   encodeFunctionData(functionFragment: "owner", values?: undefined): string;
   encodeFunctionData(
@@ -150,18 +109,6 @@ export interface WildlifeDAOInterface extends Interface {
   encodeFunctionData(
     functionFragment: "proposalIdToProjectId",
     values: [string]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "quadraticContribute",
-    values: [BigNumberish, BigNumberish]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "rejectProject",
-    values: [BigNumberish]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "removeValidator",
-    values: [AddressLike]
   ): string;
   encodeFunctionData(
     functionFragment: "renounceOwnership",
@@ -181,23 +128,11 @@ export interface WildlifeDAOInterface extends Interface {
     values: [AddressLike]
   ): string;
   encodeFunctionData(
-    functionFragment: "validateProject",
-    values: [BigNumberish]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "validators",
-    values: [AddressLike]
-  ): string;
-  encodeFunctionData(
     functionFragment: "voteOnProject",
     values: [BigNumberish, boolean]
   ): string;
   encodeFunctionData(functionFragment: "wldToken", values?: undefined): string;
 
-  decodeFunctionResult(
-    functionFragment: "AUTO_VALIDATION_PERIOD",
-    data: BytesLike
-  ): Result;
   decodeFunctionResult(functionFragment: "DAO_FEE", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "MAX_DONATION",
@@ -217,15 +152,11 @@ export interface WildlifeDAOInterface extends Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "addValidator",
+    functionFragment: "checkVoteEligibility",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "calculateVoteCost",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "checkAndAutoValidate",
+    functionFragment: "debugProjectStatus",
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "donate", data: BytesLike): Result;
@@ -234,20 +165,7 @@ export interface WildlifeDAOInterface extends Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "getProjectByProposalId",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "getProjectVotes",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "getProposalStatus",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(functionFragment: "hasVoted", data: BytesLike): Result;
-  decodeFunctionResult(
-    functionFragment: "minValidationsRequired",
+    functionFragment: "getProjectState",
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "owner", data: BytesLike): Result;
@@ -258,18 +176,6 @@ export interface WildlifeDAOInterface extends Interface {
   decodeFunctionResult(functionFragment: "projects", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "proposalIdToProjectId",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "quadraticContribute",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "rejectProject",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "removeValidator",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -289,11 +195,6 @@ export interface WildlifeDAOInterface extends Interface {
     functionFragment: "transferOwnership",
     data: BytesLike
   ): Result;
-  decodeFunctionResult(
-    functionFragment: "validateProject",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(functionFragment: "validators", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "voteOnProject",
     data: BytesLike
@@ -339,34 +240,6 @@ export namespace OwnershipTransferredEvent {
   export type LogDescription = TypedLogDescription<Event>;
 }
 
-export namespace ProjectContributionEvent {
-  export type InputTuple = [
-    projectId: BigNumberish,
-    contributor: AddressLike,
-    amount: BigNumberish,
-    tokensBurned: BigNumberish,
-    totalFunding: BigNumberish
-  ];
-  export type OutputTuple = [
-    projectId: bigint,
-    contributor: string,
-    amount: bigint,
-    tokensBurned: bigint,
-    totalFunding: bigint
-  ];
-  export interface OutputObject {
-    projectId: bigint;
-    contributor: string;
-    amount: bigint;
-    tokensBurned: bigint;
-    totalFunding: bigint;
-  }
-  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
-  export type Filter = TypedDeferredTopicFilter<Event>;
-  export type Log = TypedEventLog<Event>;
-  export type LogDescription = TypedLogDescription<Event>;
-}
-
 export namespace ProjectStatusChangedEvent {
   export type InputTuple = [
     projectId: BigNumberish,
@@ -389,114 +262,27 @@ export namespace ProjectStatusChangedEvent {
   export type LogDescription = TypedLogDescription<Event>;
 }
 
-export namespace ProjectStatusUpdatedEvent {
-  export type InputTuple = [projectId: BigNumberish, newStatus: BigNumberish];
-  export type OutputTuple = [projectId: bigint, newStatus: bigint];
-  export interface OutputObject {
-    projectId: bigint;
-    newStatus: bigint;
-  }
-  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
-  export type Filter = TypedDeferredTopicFilter<Event>;
-  export type Log = TypedEventLog<Event>;
-  export type LogDescription = TypedLogDescription<Event>;
-}
-
-export namespace ProjectSubmittedEvent {
-  export type InputTuple = [
-    projectId: BigNumberish,
-    proposer: AddressLike,
-    title: string,
-    fundingRequired: BigNumberish
-  ];
-  export type OutputTuple = [
-    projectId: bigint,
-    proposer: string,
-    title: string,
-    fundingRequired: bigint
-  ];
-  export interface OutputObject {
-    projectId: bigint;
-    proposer: string;
-    title: string;
-    fundingRequired: bigint;
-  }
-  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
-  export type Filter = TypedDeferredTopicFilter<Event>;
-  export type Log = TypedEventLog<Event>;
-  export type LogDescription = TypedLogDescription<Event>;
-}
-
-export namespace ProjectValidatedEvent {
-  export type InputTuple = [
-    projectId: BigNumberish,
-    validator: AddressLike,
-    currentValidations: BigNumberish
-  ];
-  export type OutputTuple = [
-    projectId: bigint,
-    validator: string,
-    currentValidations: bigint
-  ];
-  export interface OutputObject {
-    projectId: bigint;
-    validator: string;
-    currentValidations: bigint;
-  }
-  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
-  export type Filter = TypedDeferredTopicFilter<Event>;
-  export type Log = TypedEventLog<Event>;
-  export type LogDescription = TypedLogDescription<Event>;
-}
-
 export namespace ProposalSubmittedEvent {
   export type InputTuple = [
-    proposalId: string,
     projectId: BigNumberish,
     submitter: AddressLike,
     title: string,
     fundingRequired: BigNumberish,
-    status: string
+    status: BigNumberish
   ];
   export type OutputTuple = [
-    proposalId: string,
     projectId: bigint,
     submitter: string,
     title: string,
     fundingRequired: bigint,
-    status: string
+    status: bigint
   ];
   export interface OutputObject {
-    proposalId: string;
     projectId: bigint;
     submitter: string;
     title: string;
     fundingRequired: bigint;
-    status: string;
-  }
-  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
-  export type Filter = TypedDeferredTopicFilter<Event>;
-  export type Log = TypedEventLog<Event>;
-  export type LogDescription = TypedLogDescription<Event>;
-}
-
-export namespace ValidatorAddedEvent {
-  export type InputTuple = [validator: AddressLike];
-  export type OutputTuple = [validator: string];
-  export interface OutputObject {
-    validator: string;
-  }
-  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
-  export type Filter = TypedDeferredTopicFilter<Event>;
-  export type Log = TypedEventLog<Event>;
-  export type LogDescription = TypedLogDescription<Event>;
-}
-
-export namespace ValidatorRemovedEvent {
-  export type InputTuple = [validator: AddressLike];
-  export type OutputTuple = [validator: string];
-  export interface OutputObject {
-    validator: string;
+    status: bigint;
   }
   export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
   export type Filter = TypedDeferredTopicFilter<Event>;
@@ -572,8 +358,6 @@ export interface WildlifeDAO extends BaseContract {
     event?: TCEvent
   ): Promise<this>;
 
-  AUTO_VALIDATION_PERIOD: TypedContractMethod<[], [bigint], "view">;
-
   DAO_FEE: TypedContractMethod<[], [bigint], "view">;
 
   MAX_DONATION: TypedContractMethod<[], [bigint], "view">;
@@ -586,22 +370,24 @@ export interface WildlifeDAO extends BaseContract {
 
   VOTING_PERIOD: TypedContractMethod<[], [bigint], "view">;
 
-  addValidator: TypedContractMethod<
-    [validator: AddressLike],
-    [void],
-    "nonpayable"
-  >;
-
-  calculateVoteCost: TypedContractMethod<
-    [numVotes: BigNumberish],
-    [bigint],
+  checkVoteEligibility: TypedContractMethod<
+    [projectId: BigNumberish, voter: AddressLike],
+    [[boolean, string] & { isEligible: boolean; reason: string }],
     "view"
   >;
 
-  checkAndAutoValidate: TypedContractMethod<
+  debugProjectStatus: TypedContractMethod<
     [projectId: BigNumberish],
-    [void],
-    "nonpayable"
+    [
+      [bigint, bigint, bigint, bigint, boolean] & {
+        status: bigint;
+        currentTime: bigint;
+        votingStartTime: bigint;
+        votingEndTime: bigint;
+        canVoteNow: boolean;
+      }
+    ],
+    "view"
   >;
 
   donate: TypedContractMethod<
@@ -612,52 +398,19 @@ export interface WildlifeDAO extends BaseContract {
 
   exchangeRate: TypedContractMethod<[], [bigint], "view">;
 
-  getProjectByProposalId: TypedContractMethod<
-    [proposalId: string],
-    [
-      [bigint, string, string, bigint] & {
-        projectId: bigint;
-        title: string;
-        proposer: string;
-        status: bigint;
-      }
-    ],
-    "view"
-  >;
-
-  getProjectVotes: TypedContractMethod<
+  getProjectState: TypedContractMethod<
     [projectId: BigNumberish],
     [
-      [bigint, bigint, bigint] & {
-        forVotes: bigint;
-        againstVotes: bigint;
-        votingEndTime: bigint;
-      }
-    ],
-    "view"
-  >;
-
-  getProposalStatus: TypedContractMethod<
-    [proposalId: string],
-    [
       [bigint, bigint, bigint, bigint, bigint] & {
-        projectId: bigint;
         status: bigint;
-        submissionTime: bigint;
         votingStartTime: bigint;
         votingEndTime: bigint;
+        forVotes: bigint;
+        againstVotes: bigint;
       }
     ],
     "view"
   >;
-
-  hasVoted: TypedContractMethod<
-    [projectId: BigNumberish, voter: AddressLike],
-    [boolean],
-    "view"
-  >;
-
-  minValidationsRequired: TypedContractMethod<[], [bigint], "view">;
 
   owner: TypedContractMethod<[], [string], "view">;
 
@@ -678,15 +431,14 @@ export interface WildlifeDAO extends BaseContract {
         bigint,
         bigint,
         bigint,
-        bigint,
-        boolean
+        boolean,
+        string
       ] & {
         title: string;
         description: string;
         proposer: string;
         fundingRequired: bigint;
         fundingReceived: bigint;
-        validationCount: bigint;
         status: bigint;
         submissionTime: bigint;
         forVotes: bigint;
@@ -694,30 +446,13 @@ export interface WildlifeDAO extends BaseContract {
         votingStartTime: bigint;
         votingEndTime: bigint;
         executed: boolean;
+        proposalId: string;
       }
     ],
     "view"
   >;
 
   proposalIdToProjectId: TypedContractMethod<[arg0: string], [bigint], "view">;
-
-  quadraticContribute: TypedContractMethod<
-    [projectId: BigNumberish, numVotes: BigNumberish],
-    [void],
-    "nonpayable"
-  >;
-
-  rejectProject: TypedContractMethod<
-    [projectId: BigNumberish],
-    [void],
-    "nonpayable"
-  >;
-
-  removeValidator: TypedContractMethod<
-    [validator: AddressLike],
-    [void],
-    "nonpayable"
-  >;
 
   renounceOwnership: TypedContractMethod<[], [void], "nonpayable">;
 
@@ -742,14 +477,6 @@ export interface WildlifeDAO extends BaseContract {
     "nonpayable"
   >;
 
-  validateProject: TypedContractMethod<
-    [projectId: BigNumberish],
-    [void],
-    "nonpayable"
-  >;
-
-  validators: TypedContractMethod<[arg0: AddressLike], [boolean], "view">;
-
   voteOnProject: TypedContractMethod<
     [projectId: BigNumberish, support: boolean],
     [void],
@@ -762,9 +489,6 @@ export interface WildlifeDAO extends BaseContract {
     key: string | FunctionFragment
   ): T;
 
-  getFunction(
-    nameOrSignature: "AUTO_VALIDATION_PERIOD"
-  ): TypedContractMethod<[], [bigint], "view">;
   getFunction(
     nameOrSignature: "DAO_FEE"
   ): TypedContractMethod<[], [bigint], "view">;
@@ -784,14 +508,27 @@ export interface WildlifeDAO extends BaseContract {
     nameOrSignature: "VOTING_PERIOD"
   ): TypedContractMethod<[], [bigint], "view">;
   getFunction(
-    nameOrSignature: "addValidator"
-  ): TypedContractMethod<[validator: AddressLike], [void], "nonpayable">;
+    nameOrSignature: "checkVoteEligibility"
+  ): TypedContractMethod<
+    [projectId: BigNumberish, voter: AddressLike],
+    [[boolean, string] & { isEligible: boolean; reason: string }],
+    "view"
+  >;
   getFunction(
-    nameOrSignature: "calculateVoteCost"
-  ): TypedContractMethod<[numVotes: BigNumberish], [bigint], "view">;
-  getFunction(
-    nameOrSignature: "checkAndAutoValidate"
-  ): TypedContractMethod<[projectId: BigNumberish], [void], "nonpayable">;
+    nameOrSignature: "debugProjectStatus"
+  ): TypedContractMethod<
+    [projectId: BigNumberish],
+    [
+      [bigint, bigint, bigint, bigint, boolean] & {
+        status: bigint;
+        currentTime: bigint;
+        votingStartTime: bigint;
+        votingEndTime: bigint;
+        canVoteNow: boolean;
+      }
+    ],
+    "view"
+  >;
   getFunction(
     nameOrSignature: "donate"
   ): TypedContractMethod<
@@ -803,57 +540,20 @@ export interface WildlifeDAO extends BaseContract {
     nameOrSignature: "exchangeRate"
   ): TypedContractMethod<[], [bigint], "view">;
   getFunction(
-    nameOrSignature: "getProjectByProposalId"
-  ): TypedContractMethod<
-    [proposalId: string],
-    [
-      [bigint, string, string, bigint] & {
-        projectId: bigint;
-        title: string;
-        proposer: string;
-        status: bigint;
-      }
-    ],
-    "view"
-  >;
-  getFunction(
-    nameOrSignature: "getProjectVotes"
+    nameOrSignature: "getProjectState"
   ): TypedContractMethod<
     [projectId: BigNumberish],
     [
-      [bigint, bigint, bigint] & {
-        forVotes: bigint;
-        againstVotes: bigint;
-        votingEndTime: bigint;
-      }
-    ],
-    "view"
-  >;
-  getFunction(
-    nameOrSignature: "getProposalStatus"
-  ): TypedContractMethod<
-    [proposalId: string],
-    [
       [bigint, bigint, bigint, bigint, bigint] & {
-        projectId: bigint;
         status: bigint;
-        submissionTime: bigint;
         votingStartTime: bigint;
         votingEndTime: bigint;
+        forVotes: bigint;
+        againstVotes: bigint;
       }
     ],
     "view"
   >;
-  getFunction(
-    nameOrSignature: "hasVoted"
-  ): TypedContractMethod<
-    [projectId: BigNumberish, voter: AddressLike],
-    [boolean],
-    "view"
-  >;
-  getFunction(
-    nameOrSignature: "minValidationsRequired"
-  ): TypedContractMethod<[], [bigint], "view">;
   getFunction(
     nameOrSignature: "owner"
   ): TypedContractMethod<[], [string], "view">;
@@ -877,15 +577,14 @@ export interface WildlifeDAO extends BaseContract {
         bigint,
         bigint,
         bigint,
-        bigint,
-        boolean
+        boolean,
+        string
       ] & {
         title: string;
         description: string;
         proposer: string;
         fundingRequired: bigint;
         fundingReceived: bigint;
-        validationCount: bigint;
         status: bigint;
         submissionTime: bigint;
         forVotes: bigint;
@@ -893,6 +592,7 @@ export interface WildlifeDAO extends BaseContract {
         votingStartTime: bigint;
         votingEndTime: bigint;
         executed: boolean;
+        proposalId: string;
       }
     ],
     "view"
@@ -900,19 +600,6 @@ export interface WildlifeDAO extends BaseContract {
   getFunction(
     nameOrSignature: "proposalIdToProjectId"
   ): TypedContractMethod<[arg0: string], [bigint], "view">;
-  getFunction(
-    nameOrSignature: "quadraticContribute"
-  ): TypedContractMethod<
-    [projectId: BigNumberish, numVotes: BigNumberish],
-    [void],
-    "nonpayable"
-  >;
-  getFunction(
-    nameOrSignature: "rejectProject"
-  ): TypedContractMethod<[projectId: BigNumberish], [void], "nonpayable">;
-  getFunction(
-    nameOrSignature: "removeValidator"
-  ): TypedContractMethod<[validator: AddressLike], [void], "nonpayable">;
   getFunction(
     nameOrSignature: "renounceOwnership"
   ): TypedContractMethod<[], [void], "nonpayable">;
@@ -937,12 +624,6 @@ export interface WildlifeDAO extends BaseContract {
   getFunction(
     nameOrSignature: "transferOwnership"
   ): TypedContractMethod<[newOwner: AddressLike], [void], "nonpayable">;
-  getFunction(
-    nameOrSignature: "validateProject"
-  ): TypedContractMethod<[projectId: BigNumberish], [void], "nonpayable">;
-  getFunction(
-    nameOrSignature: "validators"
-  ): TypedContractMethod<[arg0: AddressLike], [boolean], "view">;
   getFunction(
     nameOrSignature: "voteOnProject"
   ): TypedContractMethod<
@@ -969,13 +650,6 @@ export interface WildlifeDAO extends BaseContract {
     OwnershipTransferredEvent.OutputObject
   >;
   getEvent(
-    key: "ProjectContribution"
-  ): TypedContractEvent<
-    ProjectContributionEvent.InputTuple,
-    ProjectContributionEvent.OutputTuple,
-    ProjectContributionEvent.OutputObject
-  >;
-  getEvent(
     key: "ProjectStatusChanged"
   ): TypedContractEvent<
     ProjectStatusChangedEvent.InputTuple,
@@ -983,46 +657,11 @@ export interface WildlifeDAO extends BaseContract {
     ProjectStatusChangedEvent.OutputObject
   >;
   getEvent(
-    key: "ProjectStatusUpdated"
-  ): TypedContractEvent<
-    ProjectStatusUpdatedEvent.InputTuple,
-    ProjectStatusUpdatedEvent.OutputTuple,
-    ProjectStatusUpdatedEvent.OutputObject
-  >;
-  getEvent(
-    key: "ProjectSubmitted"
-  ): TypedContractEvent<
-    ProjectSubmittedEvent.InputTuple,
-    ProjectSubmittedEvent.OutputTuple,
-    ProjectSubmittedEvent.OutputObject
-  >;
-  getEvent(
-    key: "ProjectValidated"
-  ): TypedContractEvent<
-    ProjectValidatedEvent.InputTuple,
-    ProjectValidatedEvent.OutputTuple,
-    ProjectValidatedEvent.OutputObject
-  >;
-  getEvent(
     key: "ProposalSubmitted"
   ): TypedContractEvent<
     ProposalSubmittedEvent.InputTuple,
     ProposalSubmittedEvent.OutputTuple,
     ProposalSubmittedEvent.OutputObject
-  >;
-  getEvent(
-    key: "ValidatorAdded"
-  ): TypedContractEvent<
-    ValidatorAddedEvent.InputTuple,
-    ValidatorAddedEvent.OutputTuple,
-    ValidatorAddedEvent.OutputObject
-  >;
-  getEvent(
-    key: "ValidatorRemoved"
-  ): TypedContractEvent<
-    ValidatorRemovedEvent.InputTuple,
-    ValidatorRemovedEvent.OutputTuple,
-    ValidatorRemovedEvent.OutputObject
   >;
   getEvent(
     key: "VoteCast"
@@ -1055,17 +694,6 @@ export interface WildlifeDAO extends BaseContract {
       OwnershipTransferredEvent.OutputObject
     >;
 
-    "ProjectContribution(uint256,address,uint256,uint256,uint256)": TypedContractEvent<
-      ProjectContributionEvent.InputTuple,
-      ProjectContributionEvent.OutputTuple,
-      ProjectContributionEvent.OutputObject
-    >;
-    ProjectContribution: TypedContractEvent<
-      ProjectContributionEvent.InputTuple,
-      ProjectContributionEvent.OutputTuple,
-      ProjectContributionEvent.OutputObject
-    >;
-
     "ProjectStatusChanged(uint256,uint8,uint8)": TypedContractEvent<
       ProjectStatusChangedEvent.InputTuple,
       ProjectStatusChangedEvent.OutputTuple,
@@ -1077,40 +705,7 @@ export interface WildlifeDAO extends BaseContract {
       ProjectStatusChangedEvent.OutputObject
     >;
 
-    "ProjectStatusUpdated(uint256,uint8)": TypedContractEvent<
-      ProjectStatusUpdatedEvent.InputTuple,
-      ProjectStatusUpdatedEvent.OutputTuple,
-      ProjectStatusUpdatedEvent.OutputObject
-    >;
-    ProjectStatusUpdated: TypedContractEvent<
-      ProjectStatusUpdatedEvent.InputTuple,
-      ProjectStatusUpdatedEvent.OutputTuple,
-      ProjectStatusUpdatedEvent.OutputObject
-    >;
-
-    "ProjectSubmitted(uint256,address,string,uint256)": TypedContractEvent<
-      ProjectSubmittedEvent.InputTuple,
-      ProjectSubmittedEvent.OutputTuple,
-      ProjectSubmittedEvent.OutputObject
-    >;
-    ProjectSubmitted: TypedContractEvent<
-      ProjectSubmittedEvent.InputTuple,
-      ProjectSubmittedEvent.OutputTuple,
-      ProjectSubmittedEvent.OutputObject
-    >;
-
-    "ProjectValidated(uint256,address,uint256)": TypedContractEvent<
-      ProjectValidatedEvent.InputTuple,
-      ProjectValidatedEvent.OutputTuple,
-      ProjectValidatedEvent.OutputObject
-    >;
-    ProjectValidated: TypedContractEvent<
-      ProjectValidatedEvent.InputTuple,
-      ProjectValidatedEvent.OutputTuple,
-      ProjectValidatedEvent.OutputObject
-    >;
-
-    "ProposalSubmitted(string,uint256,address,string,uint256,string)": TypedContractEvent<
+    "ProposalSubmitted(uint256,address,string,uint256,uint8)": TypedContractEvent<
       ProposalSubmittedEvent.InputTuple,
       ProposalSubmittedEvent.OutputTuple,
       ProposalSubmittedEvent.OutputObject
@@ -1119,28 +714,6 @@ export interface WildlifeDAO extends BaseContract {
       ProposalSubmittedEvent.InputTuple,
       ProposalSubmittedEvent.OutputTuple,
       ProposalSubmittedEvent.OutputObject
-    >;
-
-    "ValidatorAdded(address)": TypedContractEvent<
-      ValidatorAddedEvent.InputTuple,
-      ValidatorAddedEvent.OutputTuple,
-      ValidatorAddedEvent.OutputObject
-    >;
-    ValidatorAdded: TypedContractEvent<
-      ValidatorAddedEvent.InputTuple,
-      ValidatorAddedEvent.OutputTuple,
-      ValidatorAddedEvent.OutputObject
-    >;
-
-    "ValidatorRemoved(address)": TypedContractEvent<
-      ValidatorRemovedEvent.InputTuple,
-      ValidatorRemovedEvent.OutputTuple,
-      ValidatorRemovedEvent.OutputObject
-    >;
-    ValidatorRemoved: TypedContractEvent<
-      ValidatorRemovedEvent.InputTuple,
-      ValidatorRemovedEvent.OutputTuple,
-      ValidatorRemovedEvent.OutputObject
     >;
 
     "VoteCast(uint256,address,bool,uint256)": TypedContractEvent<

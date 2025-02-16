@@ -2,10 +2,8 @@ import { ethers } from "ethers";
 import WildlifeDAOABI from "./WildlifeDAOABI.json";
 
 // Update these addresses with the newly deployed contracts
-export const WILDLIFE_DAO_ADDRESS =
-  "0x30499FC4Bc807942498f6b6660486Ee9233d06B0";
-export const WILDLIFE_TOKEN_ADDRESS =
-  "0x0091524C5C7DBA5b1b418390E23c468D2d99b54D";
+export const WILDLIFE_DAO_ADDRESS = "0x526E3592154b4462c8C3BD757f742884027052CF";
+export const WILDLIFE_TOKEN_ADDRESS = "0xEee63a8CB5ee79d5931FaBf6f5FE8470371ee556";
 
 export const WILDLIFE_DAO_ABI = [
   {
@@ -74,14 +72,54 @@ export const WILDLIFE_DAO_ABI = [
     type: "event",
   },
   "function validateProject(uint256 projectId) external",
-  "function voteOnProject(uint256 projectId, bool support) external",
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "projectId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bool",
+        "name": "support",
+        "type": "bool"
+      }
+    ],
+    "name": "voteOnProject",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "projectId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "voter",
+        "type": "address"
+      }
+    ],
+    "name": "hasVoted",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
   "function addValidator(address validator) external",
   "function wldToken() external view returns (address)",
   "function totalValueLocked() external view returns (uint256)",
   "function totalWLD() external view returns (uint256)",
   "function exchangeRate() external view returns (uint256)",
   "function getProjectVotes(uint256 projectId) external view returns (uint256 forVotes, uint256 againstVotes, uint256 votingEndTime)",
-  "function hasVoted(uint256 projectId, address voter) external view returns (bool)",
   "event ProjectSubmitted(uint256 indexed projectId, address indexed proposer, string title, uint256 fundingRequired)",
   "event ProjectValidated(uint256 indexed projectId, address indexed validator, uint256 currentValidations)",
   "event ProjectStatusUpdated(uint256 indexed projectId, uint8 newStatus)",

@@ -1,636 +1,483 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
-import AuthGuard from "@/components/AuthGuard";
-import { ethers } from "ethers";
-import { getWLDTokenContract } from "@/lib/contracts/WildlifeDAOToken";
-import {
-  getWildlifeDAOContract,
-  WILDLIFE_DAO_ADDRESS,
-  WILDLIFE_DAO_ABI,
-} from "@/lib/contracts/WildlifeDAO";
+import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
+import { ethers } from "ethers";
+import { getWildlifeDAOContract } from "@/lib/contracts/WildlifeDAO";
+import { getWLDTokenContract } from "@/lib/contracts/WildlifeDAOToken";
+import { ArrowLeftIcon } from "@heroicons/react/24/outline";
 
 interface Project {
-  id: number;
+  id: string;
   title: string;
   description: string;
-  fundingRequired: number;
-  status: "Pending" | "Validating" | "Approved" | "Rejected" | "Executed";
-  forVotes: number;
-  againstVotes: number;
-  votingStartTime: number;
-  votingEndTime: number;
-  location?: string;
-  impact?: string;
-  team?: string;
-  timeline?: string;
-  milestones?: { title: string; description: string; date: string }[];
-  submissionTime: number;
+  funding_required: number;
+  location: string;
+  timeline: string;
+  technical_requirements: string;
+  impact_metrics: string;
+  team_background: string;
+  budget_breakdown: Array<{ item: string; amount: number }>;
+  milestones: Array<{ title: string; description: string; deadline: string }>;
+  status: string;
+  validation_status: string;
+  blockchain_status: string;
+  contract_project_id: string;
+  voting_start_time: string;
+  voting_end_time: string;
+  votes: { forVotes: number; againstVotes: number; participation: number };
 }
 
-// Helper function for formatting time
-function formatTimeRemaining(endDate: Date): string {
-  const now = new Date();
-  const diff = endDate.getTime() - now.getTime();
-
-  if (diff <= 0) return "Voting ended";
-
-  const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-  const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-  const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-
-  if (days > 0) return `${days}d ${hours}h remaining`;
-  if (hours > 0) return `${hours}h ${minutes}m remaining`;
-  return `${minutes}m remaining`;
-}
-
-// Mock project data with additional details
-const MOCK_PROJECTS: Project[] = [
-  {
-    id: 1,
+const HARDCODED_PROJECTS = {
+  "1": {
+    id: "1",
     title: "Sumatran Rhino Conservation",
     description:
       "Protecting the critically endangered Sumatran rhinos through habitat preservation and anti-poaching measures.",
-    fundingRequired: 60000,
-    status: "Approved",
-    forVotes: 4500,
-    againstVotes: 2500,
-    votingStartTime: 1700000000,
-    votingEndTime: 1700000000,
+    funding_required: 60000,
     location: "Sumatra, Indonesia",
-    impact:
-      "Protection of 50 Sumatran rhinos and their habitat, supporting local communities through conservation jobs.",
-    team: "Led by Dr. Sarah Chen, with 15 years of experience in wildlife conservation.",
-    timeline: "12-month project with quarterly milestones",
+    timeline: "12 months",
+    technical_requirements:
+      "Anti-poaching technology deployment and habitat monitoring systems",
+    impact_metrics:
+      "Increase in rhino population, reduction in poaching incidents",
+    team_background: "Team of conservation experts and local rangers",
+    budget_breakdown: [
+      { item: "Anti-poaching equipment", amount: 20000 },
+      { item: "Habitat restoration", amount: 25000 },
+      { item: "Community engagement", amount: 15000 },
+    ],
     milestones: [
       {
-        title: "Phase 1: Habitat Assessment",
-        description:
-          "Complete survey of rhino populations and habitat conditions",
-        date: "Q1 2024",
+        title: "Initial Assessment",
+        description: "Complete survey of current rhino population",
+        deadline: "2024-04-01",
       },
       {
-        title: "Phase 2: Anti-poaching Measures",
-        description:
-          "Deploy advanced monitoring systems and train local rangers",
-        date: "Q2 2024",
+        title: "Equipment Deployment",
+        description: "Install monitoring systems",
+        deadline: "2024-06-01",
       },
       {
-        title: "Phase 3: Community Engagement",
-        description: "Establish community-based conservation programs",
-        date: "Q3 2024",
+        title: "Community Program",
+        description: "Launch local community conservation program",
+        deadline: "2024-08-01",
       },
     ],
-    submissionTime: 1700000000,
+    status: "Approved",
+    validation_status: "Approved",
+    blockchain_status: "Approved",
+    contract_project_id: "1",
+    voting_start_time: new Date().toISOString(),
+    voting_end_time: new Date(
+      Date.now() + 7 * 24 * 60 * 60 * 1000
+    ).toISOString(),
+    votes: { forVotes: 45, againstVotes: 25, participation: 70 },
   },
-  {
-    id: 2,
+  "2": {
+    id: "2",
     title: "Amazon Rainforest Protection",
     description:
       "Supporting indigenous communities in protecting their ancestral forests from illegal logging.",
-    fundingRequired: 150000,
-    status: "Approved",
-    forVotes: 6000,
-    againstVotes: 1500,
-    votingStartTime: 1700000000,
-    votingEndTime: 1700000000,
+    funding_required: 150000,
     location: "Amazon Basin, Brazil",
-    impact:
-      "Protection of 10,000 hectares of rainforest and support for 5 indigenous communities.",
-    team: "Partnership with Indigenous Rights Foundation and local leaders",
-    timeline: "24-month project with biannual reviews",
+    timeline: "24 months",
+    technical_requirements:
+      "Satellite monitoring systems and drone surveillance",
+    impact_metrics:
+      "Hectares of forest protected, reduction in illegal logging",
+    team_background: "Indigenous leaders and environmental scientists",
+    budget_breakdown: [
+      { item: "Monitoring equipment", amount: 50000 },
+      { item: "Community support", amount: 60000 },
+      { item: "Legal assistance", amount: 40000 },
+    ],
     milestones: [
       {
-        title: "Phase 1: Community Consultation",
-        description: "Establish partnerships with indigenous communities",
-        date: "Q1 2024",
+        title: "Community Engagement",
+        description: "Establish partnerships with local tribes",
+        deadline: "2024-05-01",
       },
       {
-        title: "Phase 2: Surveillance System",
-        description: "Install forest monitoring technology",
-        date: "Q2 2024",
+        title: "Technology Setup",
+        description: "Deploy monitoring systems",
+        deadline: "2024-07-01",
       },
       {
-        title: "Phase 3: Sustainable Agriculture",
-        description: "Implement sustainable farming practices",
-        date: "Q3 2024",
+        title: "Training Program",
+        description: "Complete community ranger training",
+        deadline: "2024-09-01",
       },
     ],
-    submissionTime: 1700000000,
+    status: "Approved",
+    validation_status: "Approved",
+    blockchain_status: "Approved",
+    contract_project_id: "2",
+    voting_start_time: new Date().toISOString(),
+    voting_end_time: new Date(
+      Date.now() + 7 * 24 * 60 * 60 * 1000
+    ).toISOString(),
+    votes: { forVotes: 60, againstVotes: 15, participation: 75 },
   },
-  {
-    id: 3,
+  "3": {
+    id: "3",
     title: "Arctic Fox Habitat Preservation",
     description:
       "Establishing protected areas for Arctic fox breeding grounds in Iceland.",
-    fundingRequired: 50000,
-    status: "Approved",
-    forVotes: 3000,
-    againstVotes: 2000,
-    votingStartTime: 1700000000,
-    votingEndTime: 1700000000,
-    location: "Northern Iceland",
-    impact:
-      "Protection of critical breeding grounds affecting 200+ Arctic foxes",
-    team: "Collaboration with Icelandic Wildlife Service",
-    timeline: "18-month project with quarterly reviews",
+    funding_required: 50000,
+    location: "Iceland",
+    timeline: "18 months",
+    technical_requirements: "Wildlife tracking systems and habitat monitoring",
+    impact_metrics: "Number of breeding pairs, cubs survival rate",
+    team_background: "Arctic wildlife specialists and local conservationists",
+    budget_breakdown: [
+      { item: "Habitat protection", amount: 20000 },
+      { item: "Research equipment", amount: 15000 },
+      { item: "Conservation measures", amount: 15000 },
+    ],
     milestones: [
       {
-        title: "Phase 1: Territory Mapping",
-        description: "GPS tracking and den site identification",
-        date: "Q1 2024",
+        title: "Site Selection",
+        description: "Identify key breeding areas",
+        deadline: "2024-03-01",
       },
       {
-        title: "Phase 2: Protected Area Designation",
-        description: "Legal establishment of conservation zones",
-        date: "Q2 2024",
+        title: "Protection Setup",
+        description: "Establish protected zones",
+        deadline: "2024-06-01",
       },
       {
-        title: "Phase 3: Population Monitoring",
-        description: "Implementation of long-term monitoring program",
-        date: "Q4 2024",
+        title: "Monitoring Program",
+        description: "Implement tracking system",
+        deadline: "2024-08-01",
       },
     ],
-    submissionTime: 1700000000,
+    status: "Approved",
+    validation_status: "Approved",
+    blockchain_status: "Approved",
+    contract_project_id: "3",
+    voting_start_time: new Date().toISOString(),
+    voting_end_time: new Date(
+      Date.now() + 7 * 24 * 60 * 60 * 1000
+    ).toISOString(),
+    votes: { forVotes: 30, againstVotes: 20, participation: 50 },
   },
-];
-
-// Add type guard
-const checkEthereum = () => {
-  if (!window.ethereum) {
-    throw new Error("Please install MetaMask");
-  }
-  return window.ethereum as ethers.Eip1193Provider;
 };
 
-export default function ProjectDetailPage() {
-  const params = useParams();
-  const router = useRouter();
+export default function ProjectDetailPage({
+  params,
+}: {
+  params: { id: string };
+}) {
   const [project, setProject] = useState<Project | null>(null);
-  const [tokenBalance, setTokenBalance] = useState<string>("0");
-  const [totalSupply, setTotalSupply] = useState<string>("0");
-  const [votingPower, setVotingPower] = useState<number>(0);
-  const [now, setNow] = useState(new Date());
+  const [votes, setVotes] = useState({ forVotes: 0, againstVotes: 0 });
+  const [hasVoted, setHasVoted] = useState(false);
+  const [timeLeft, setTimeLeft] = useState("");
+  const router = useRouter();
 
   useEffect(() => {
-    console.log("Project ID from params:", params.id);
-    const found = MOCK_PROJECTS.find((p) => p.id.toString() === params.id);
-    console.log("Found project:", found);
-    if (found) {
-      setProject({ ...found, votingEndTime: Number(found.votingEndTime) });
-    }
-    checkAuth();
+    const fetchProject = async () => {
+      try {
+        // First try to get from Supabase
+        const { data: dbProject, error } = await supabase
+          .from("projects")
+          .select("*")
+          .eq("id", params.id)
+          .single();
+
+        if (error) {
+          console.log("No DB project found, checking mock projects");
+          // If not in DB, check mock projects
+          const mockProject =
+            HARDCODED_PROJECTS[params.id as keyof typeof HARDCODED_PROJECTS];
+          if (mockProject) {
+            setProject(mockProject);
+            setVotes({
+              forVotes: mockProject.votes.forVotes,
+              againstVotes: mockProject.votes.againstVotes,
+            });
+          }
+        } else {
+          // Found in DB, format it like a Project
+          const formattedProject: Project = {
+            ...dbProject,
+            votes: {
+              forVotes: 0,
+              againstVotes: 0,
+              participation: 0,
+            },
+          };
+          setProject(formattedProject);
+
+          // If project has contract ID, fetch blockchain voting data
+          if (formattedProject.contract_project_id) {
+            await fetchVotingData(formattedProject.contract_project_id);
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching project:", error);
+      }
+    };
+
+    fetchProject();
   }, [params.id]);
 
+  // Update timer every second
   useEffect(() => {
+    if (!project?.voting_end_time) return;
+
     const timer = setInterval(() => {
-      setNow(new Date());
-    }, 60000);
-    return () => clearInterval(timer);
-  }, []);
+      const end = new Date(project.voting_end_time).getTime();
+      const now = new Date().getTime();
+      const distance = end - now;
 
-  const checkAuth = async () => {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (!user) {
-      router.push("/login");
-      return;
-    }
-
-    const { data } = await supabase
-      .from("profiles")
-      .select("wallet_address")
-      .eq("id", user.id)
-      .single();
-
-    if (data?.wallet_address) {
-      await fetchTokenInfo(data.wallet_address);
-    }
-  };
-
-  const fetchTokenInfo = async (walletAddress: string) => {
-    try {
-      if (!window.ethereum) return;
-
-      const provider = new ethers.BrowserProvider(checkEthereum());
-      const signer = await provider.getSigner();
-      const tokenContract = await getWLDTokenContract(signer);
-
-      const [balance, supply] = await Promise.all([
-        tokenContract.balanceOf(walletAddress),
-        tokenContract.totalSupply(),
-      ]);
-
-      const formattedBalance = ethers.formatUnits(balance, 18);
-      const formattedSupply = ethers.formatUnits(supply, 18);
-
-      setTokenBalance(formattedBalance);
-      setTotalSupply(formattedSupply);
-
-      const votingPowerBips =
-        (Number(formattedBalance) * 10000) / Number(formattedSupply);
-      setVotingPower(votingPowerBips);
-    } catch (error) {
-      console.error("Error fetching token info:", error);
-    }
-  };
-
-  const fetchProjectData = async (projectId: number) => {
-    if (!window.ethereum) return;
-
-    try {
-      const provider = new ethers.BrowserProvider(checkEthereum());
-      const signer = await provider.getSigner();
-      const daoContract = await getWildlifeDAOContract(signer);
-
-      // Fetch project data from the smart contract
-      const project = await daoContract.projects(projectId);
-      const [forVotes, againstVotes, votingEndTime] =
-        await daoContract.getProjectVotes(projectId);
-
-      // Format the data
-      const formattedProject: Project = {
-        id: projectId,
-        title: project.title,
-        description: project.description,
-        fundingRequired: Number(project.fundingRequired),
-        status: project.status,
-        forVotes: Number(ethers.formatUnits(forVotes, 2)),
-        againstVotes: Number(ethers.formatUnits(againstVotes, 2)),
-        votingStartTime: Number(project.votingStartTime),
-        votingEndTime: Number(votingEndTime), // This will be in Unix seconds
-        submissionTime: Number(project.submissionTime),
-      };
-
-      console.log(
-        "Project voting end time:",
-        new Date(formattedProject.votingEndTime * 1000).toLocaleString()
-      );
-      setProject(formattedProject);
-    } catch (error) {
-      console.error("Error fetching project:", error);
-    }
-  };
-
-  const handleVote = async (projectId: number, support: boolean) => {
-    try {
-      if (!window.ethereum) {
-        alert("Please connect MetaMask first");
+      if (distance < 0) {
+        setTimeLeft("Voting Ended");
         return;
       }
 
-      const provider = new ethers.BrowserProvider(checkEthereum());
-      const signer = await provider.getSigner();
-      const daoContract = await getWildlifeDAOContract(signer);
-
-      console.log("Sending vote transaction...");
-      console.log("Project ID:", projectId);
-      console.log("Support:", support);
-
-      // Call the voteOnProject function from our smart contract
-      const tx = await daoContract.voteOnProject(projectId, support);
-      console.log("Transaction sent:", tx.hash);
-
-      // Wait for the transaction to be mined
-      const receipt = await tx.wait();
-      console.log("Transaction mined:", receipt);
-
-      // Find the VoteCast event in the receipt
-      const voteCastEvent = receipt.logs.find(
-        (log: any) => log.eventName === "VoteCast"
+      const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+      const hours = Math.floor(
+        (distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)
       );
+      const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+      setTimeLeft(`${days}d ${hours}h ${minutes}m`);
+    }, 1000);
 
-      if (voteCastEvent) {
-        console.log("Vote cast event:", voteCastEvent);
-        // Refresh the project data
-        await fetchProjectData(projectId);
-
-        alert("Vote cast successfully!");
-      }
-    } catch (error: any) {
-      console.error("Error casting vote:", error);
-      if (error.message.includes("execution reverted")) {
-        alert(
-          "Transaction failed. Make sure you have enough WLD tokens and haven't already voted."
-        );
-      } else {
-        alert("Error casting vote. Please try again.");
-      }
-    }
-  };
-
-  // Use useEffect to fetch project data when the page loads
-  useEffect(() => {
-    if (params.id) {
-      fetchProjectData(Number(params.id));
-    }
-  }, [params.id]);
-
-  // Add real-time updates
-  useEffect(() => {
-    if (!project || !window.ethereum) return;
-
-    const interval = setInterval(async () => {
-      try {
-        const provider = new ethers.BrowserProvider(checkEthereum());
-        const signer = await provider.getSigner();
-        const daoContract = await getWildlifeDAOContract(signer);
-
-        // Fetch latest vote counts
-        const [forVotes, againstVotes, votingEndTime] =
-          await daoContract.getProjectVotes(project.id);
-
-        setProject((prev) => {
-          if (!prev) return null;
-          return {
-            ...prev,
-            forVotes: Number(ethers.formatUnits(forVotes, 2)),
-            againstVotes: Number(ethers.formatUnits(againstVotes, 2)),
-            votingEndTime: Number(votingEndTime),
-          };
-        });
-      } catch (error) {
-        console.error("Error updating vote counts:", error);
-      }
-    }, 10000);
-
-    return () => clearInterval(interval);
-  }, [project?.id]);
-
-  // Update the time comparison logic
-  const isVotingEnded = (votingEndTime: number) => {
-    return Date.now() > votingEndTime * 1000; // Convert blockchain timestamp to milliseconds
-  };
-
-  // Update the time remaining display
-  const getTimeStatus = (votingEndTime: number) => {
-    const now = Date.now();
-    const endTime = votingEndTime * 1000; // Convert to milliseconds
-    const oneDay = 24 * 60 * 60 * 1000;
-
-    if (now > endTime) {
-      return {
-        status: "Ended",
-        color: "text-red-500",
-        timeLeft: "Voting ended",
-      };
-    }
-
-    const timeLeft = endTime - now;
-    if (timeLeft < oneDay) {
-      return {
-        status: "Ending Soon",
-        color: "text-yellow-500",
-        timeLeft: formatTimeRemaining(new Date(endTime)),
-      };
-    }
-
-    return {
-      status: "Active",
-      color: "text-green-500",
-      timeLeft: formatTimeRemaining(new Date(endTime)),
-    };
-  };
-
-  // Add this to your useEffect in the project detail page
-  useEffect(() => {
-    if (!project || project.status !== "Pending") return;
-
-    const checkAutoValidation = async () => {
-      try {
-        const submissionTime = new Date(project.submissionTime).getTime();
-        const validationEndTime = submissionTime + 60 * 1000; // 1 minute in milliseconds
-
-        if (Date.now() >= validationEndTime) {
-          const provider = new ethers.BrowserProvider(checkEthereum());
-          const signer = await provider.getSigner();
-          const daoContract = await getWildlifeDAOContract(signer);
-
-          console.log("Checking auto-validation for project:", project.id);
-          const tx = await daoContract.checkAndAutoValidate(project.id);
-          await tx.wait();
-
-          // Refresh project data
-          await fetchProjectData(project.id);
-        }
-      } catch (error) {
-        console.error("Error checking auto-validation:", error);
-      }
-    };
-
-    const timer = setInterval(checkAutoValidation, 10000); // Check every 10 seconds
     return () => clearInterval(timer);
   }, [project]);
 
+  const handleVote = async (support: boolean) => {
+    if (!project?.contract_project_id || !window.ethereum) return;
+
+    try {
+      const provider = new ethers.BrowserProvider(window.ethereum);
+      const signer = await provider.getSigner();
+      const daoContract = await getWildlifeDAOContract(signer);
+
+      // Add detailed logging
+      console.log("Project details:", {
+        project,
+        contract_project_id: project.contract_project_id,
+        support,
+        status: project.status,
+      });
+
+      // Check project status first
+      const projectState = await daoContract.projects(
+        project.contract_project_id
+      );
+      console.log("Project state from blockchain:", projectState);
+
+      if (projectState.status !== 1) {
+        // 1 is typically the APPROVED status
+        alert(
+          "Project is not in voting phase. Current status: " +
+            projectState.status
+        );
+        return;
+      }
+
+      // First check if user has enough tokens to vote (100 WLD required)
+      const tokenContract = await getWLDTokenContract(signer);
+      const balance = await tokenContract.balanceOf(signer.address);
+      const MIN_VOTE_POWER = ethers.parseEther("100");
+
+      if (balance < MIN_VOTE_POWER) {
+        alert("You need at least 100 WLD tokens to vote");
+        return;
+      }
+
+      // Check if voting period is active
+      const votingData = await daoContract.getProjectVotes(
+        project.contract_project_id
+      );
+      const now = Math.floor(Date.now() / 1000);
+      if (now > Number(votingData.votingEndTime)) {
+        alert("Voting period has ended");
+        return;
+      }
+
+      // Check if user has already voted
+      const hasUserVoted = await daoContract.hasVoted(
+        project.contract_project_id,
+        signer.address
+      );
+      if (hasUserVoted) {
+        alert("You have already voted on this project");
+        return;
+      }
+
+      // Submit vote to blockchain
+      console.log(
+        `Voting ${support ? "for" : "against"} project ${project.contract_project_id}`
+      );
+      const tx = await daoContract.voteOnProject(
+        project.contract_project_id,
+        support,
+        { gasLimit: 300000 }
+      );
+
+      console.log("Transaction sent:", tx.hash);
+      await tx.wait();
+      console.log("Vote confirmed on blockchain");
+
+      // Update UI with new voting data
+      const updatedVotes = await daoContract.getProjectVotes(
+        project.contract_project_id
+      );
+      const totalVotes =
+        Number(updatedVotes.forVotes) + Number(updatedVotes.againstVotes);
+
+      setVotes({
+        forVotes: Math.round(
+          (Number(updatedVotes.forVotes) / totalVotes) * 100
+        ),
+        againstVotes: Math.round(
+          (Number(updatedVotes.againstVotes) / totalVotes) * 100
+        ),
+      });
+      setHasVoted(true);
+
+      alert("Vote successfully recorded!");
+    } catch (error: any) {
+      console.error("Error voting:", error);
+      if (error.message.includes("execution reverted")) {
+        alert(
+          "Transaction failed. Make sure you have enough tokens and haven't voted already."
+        );
+      } else {
+        alert(`Error: ${error.message}`);
+      }
+    }
+  };
+
+  // Update fetchVotingData to properly calculate percentages
+  const fetchVotingData = async (contractProjectId: string) => {
+    if (!window.ethereum) return;
+
+    try {
+      const provider = new ethers.BrowserProvider(window.ethereum);
+      const signer = await provider.getSigner();
+      const daoContract = await getWildlifeDAOContract(signer);
+
+      const [votingData, hasUserVoted] = await Promise.all([
+        daoContract.getProjectVotes(contractProjectId),
+        daoContract.hasVoted(contractProjectId, signer.address),
+      ]);
+
+      const totalVotes =
+        Number(votingData.forVotes) + Number(votingData.againstVotes);
+
+      setVotes({
+        forVotes:
+          totalVotes > 0
+            ? Math.round((Number(votingData.forVotes) / totalVotes) * 100)
+            : 0,
+        againstVotes:
+          totalVotes > 0
+            ? Math.round((Number(votingData.againstVotes) / totalVotes) * 100)
+            : 0,
+      });
+      setHasVoted(hasUserVoted);
+    } catch (error) {
+      console.error("Error fetching voting data:", error);
+    }
+  };
+
+  if (!project) return <div>Loading...</div>;
+
   return (
-    <AuthGuard>
-      <div className="min-h-screen bg-white">
-        <div className="container mx-auto px-4 py-8">
-          {project ? (
-            <div className="max-w-4xl mx-auto">
-              {/* Project Header */}
-              <div className="bg-white rounded-xl p-8 shadow-md border border-gray-200 mb-8">
-                <div className="flex justify-between items-start mb-6">
-                  <h1 className="text-3xl font-bold text-gray-800">
-                    {project.title}
-                  </h1>
-                  <span className="px-4 py-2 bg-green-100 text-green-800 rounded-full">
-                    {project.status}
-                  </span>
-                </div>
+    <div className="min-h-screen bg-gradient-to-b from-pink-50 to-white py-8">
+      <div className="container mx-auto px-4">
+        <button
+          onClick={() => router.back()}
+          className="flex items-center text-gray-600 hover:text-gray-900 mb-6"
+        >
+          <ArrowLeftIcon className="h-5 w-5 mr-2" />
+          Back to Projects
+        </button>
 
-                {/* Project Description */}
-                <p className="text-gray-600 text-lg mb-6">
-                  {project.description}
-                </p>
-
-                {/* Project Stats */}
-                <div className="grid md:grid-cols-3 gap-6 mb-8">
-                  <div className="bg-gray-50 p-4 rounded-lg">
-                    <div className="text-2xl font-bold text-pink-500">
-                      ${project.fundingRequired.toLocaleString()}
-                    </div>
-                    <div className="text-gray-600">Funding Required</div>
-                  </div>
-                  <div className="bg-gray-50 p-4 rounded-lg">
-                    <div className="text-2xl font-bold text-green-500">
-                      {(project.forVotes / 100).toFixed(1)}%
-                    </div>
-                    <div className="text-gray-600">Support Rate</div>
-                  </div>
-                  <div className="bg-gray-50 p-4 rounded-lg">
-                    <div className="text-2xl font-bold text-blue-500">
-                      {(
-                        (project.forVotes + project.againstVotes) /
-                        100
-                      ).toFixed(1)}
-                      %
-                    </div>
-                    <div className="text-gray-600">Participation Rate</div>
-                  </div>
-                </div>
-
-                {/* Voting Section */}
-                <div className="space-y-6">
-                  <h2 className="text-2xl font-bold text-gray-800">
-                    Cast Your Vote
-                  </h2>
-
-                  {/* Your Voting Power */}
-                  <div className="bg-gray-50 p-4 rounded-lg">
-                    <div className="text-lg font-medium text-gray-800 mb-2">
-                      Your Voting Power
-                    </div>
-                    <div className="text-3xl font-bold text-pink-500">
-                      {(votingPower / 100).toFixed(2)}%
-                    </div>
-                    <div className="text-sm text-gray-600 mt-1">
-                      Based on your WLD token balance
-                    </div>
-                  </div>
-
-                  {/* Time Remaining */}
-                  <div className="bg-gray-50 p-4 rounded-lg">
-                    <div className="flex justify-between items-center mb-2">
-                      <div className="text-lg font-medium text-gray-800">
-                        Time Remaining
-                      </div>
-                      <div
-                        className={`font-medium ${getTimeStatus(project.votingEndTime).color}`}
-                      >
-                        {getTimeStatus(project.votingEndTime).timeLeft}
-                      </div>
-                    </div>
-                    <div className="relative h-2 bg-gray-200 rounded-full overflow-hidden">
-                      <div
-                        className={`absolute left-0 h-full transition-all duration-500 ${
-                          getTimeStatus(project.votingEndTime).color
-                        }`}
-                        style={{
-                          width: `${Math.max(
-                            0,
-                            Math.min(
-                              100,
-                              ((project.votingEndTime - now.getTime()) /
-                                (7 * 24 * 60 * 60 * 1000)) *
-                                100
-                            )
-                          )}%`,
-                        }}
-                      />
-                    </div>
-                  </div>
-
-                  {/* Voting Buttons */}
-                  <div className="flex gap-6">
-                    <button
-                      onClick={() => handleVote(project.id, true)}
-                      disabled={isVotingEnded(project.votingEndTime)}
-                      className={`flex-1 py-4 rounded-xl font-bold text-lg
-                      transition-all transform hover:scale-105
-                      ${
-                        isVotingEnded(project.votingEndTime)
-                          ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                          : "bg-gradient-to-r from-green-500 to-green-600 text-white shadow-lg"
-                      }`}
-                    >
-                      Support Project
-                    </button>
-                    <button
-                      onClick={() => handleVote(project.id, false)}
-                      disabled={isVotingEnded(project.votingEndTime)}
-                      className={`flex-1 py-4 rounded-xl font-bold text-lg
-                      transition-all transform hover:scale-105
-                      ${
-                        isVotingEnded(project.votingEndTime)
-                          ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                          : "bg-gradient-to-r from-red-500 to-red-600 text-white shadow-lg"
-                      }`}
-                    >
-                      Reject Project
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              {/* Additional Project Details */}
-              <div className="bg-white rounded-xl p-8 shadow-md border border-gray-200">
-                <h2 className="text-2xl font-bold text-gray-800 mb-6">
-                  Project Details
-                </h2>
-
-                {project?.location && (
-                  <div className="mb-6">
-                    <h3 className="text-lg font-semibold text-gray-800 mb-2">
-                      Location
-                    </h3>
-                    <p className="text-gray-600">{project.location}</p>
-                  </div>
-                )}
-
-                {project?.impact && (
-                  <div className="mb-6">
-                    <h3 className="text-lg font-semibold text-gray-800 mb-2">
-                      Expected Impact
-                    </h3>
-                    <p className="text-gray-600">{project.impact}</p>
-                  </div>
-                )}
-
-                {project?.team && (
-                  <div className="mb-6">
-                    <h3 className="text-lg font-semibold text-gray-800 mb-2">
-                      Team
-                    </h3>
-                    <p className="text-gray-600">{project.team}</p>
-                  </div>
-                )}
-
-                {project?.timeline && (
-                  <div className="mb-6">
-                    <h3 className="text-lg font-semibold text-gray-800 mb-2">
-                      Timeline
-                    </h3>
-                    <p className="text-gray-600">{project.timeline}</p>
-                  </div>
-                )}
-
-                {project?.milestones && (
+        <div className="max-w-4xl mx-auto">
+          {/* Project Header */}
+          <div className="bg-white rounded-xl shadow-sm p-6 mb-8">
+            <div className="flex justify-between items-start">
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900 mb-2">
+                  {project.title}
+                </h1>
+                <p className="text-gray-600 mb-4">{project.description}</p>
+                <div className="grid grid-cols-3 gap-4 text-sm">
                   <div>
-                    <h3 className="text-lg font-semibold text-gray-800 mb-4">
-                      Milestones
-                    </h3>
-                    <div className="space-y-4">
-                      {project.milestones.map((milestone, index) => (
-                        <div key={index} className="bg-gray-50 p-4 rounded-lg">
-                          <div className="flex justify-between items-start mb-2">
-                            <h4 className="font-medium text-gray-800">
-                              {milestone.title}
-                            </h4>
-                            <span className="text-sm text-pink-500">
-                              {milestone.date}
-                            </span>
-                          </div>
-                          <p className="text-gray-600">
-                            {milestone.description}
-                          </p>
-                        </div>
-                      ))}
-                    </div>
+                    <p className="text-gray-500">Location</p>
+                    <p className="font-medium">{project.location}</p>
                   </div>
-                )}
+                  <div>
+                    <p className="text-gray-500">Timeline</p>
+                    <p className="font-medium">{project.timeline}</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-500">Funding Required</p>
+                    <p className="font-medium">
+                      ${project.funding_required.toLocaleString()}
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <span className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm">
+                {project.status}
+              </span>
+            </div>
+          </div>
+
+          {/* Voting Section */}
+          <div className="bg-white rounded-xl shadow-sm p-6">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-xl font-semibold">Project Voting</h2>
+              <div className="text-pink-500 font-medium">{timeLeft}</div>
+            </div>
+
+            <div className="flex justify-between items-center">
+              <div className="flex gap-8">
+                <div>
+                  <p className="text-sm text-gray-500">Support</p>
+                  <p className="text-2xl font-bold text-green-600">
+                    {votes.forVotes}%
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">Against</p>
+                  <p className="text-2xl font-bold text-red-600">
+                    {votes.againstVotes}%
+                  </p>
+                </div>
+              </div>
+
+              <div className="space-x-4">
+                <button
+                  onClick={() => handleVote(true)}
+                  disabled={hasVoted}
+                  className="px-6 py-2 bg-gradient-to-r from-green-500 to-green-600 
+                    text-white rounded-lg font-medium hover:from-green-600 hover:to-green-700
+                    disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Support
+                </button>
+                <button
+                  onClick={() => handleVote(false)}
+                  disabled={hasVoted}
+                  className="px-6 py-2 bg-gradient-to-r from-red-500 to-red-600 
+                    text-white rounded-lg font-medium hover:from-red-600 hover:to-red-700
+                    disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Reject
+                </button>
               </div>
             </div>
-          ) : (
-            <div className="text-center py-12">
-              <div className="text-2xl text-gray-600">Project not found</div>
-            </div>
-          )}
+          </div>
         </div>
       </div>
-    </AuthGuard>
+    </div>
   );
 }

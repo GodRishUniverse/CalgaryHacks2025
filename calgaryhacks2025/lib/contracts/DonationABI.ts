@@ -48,5 +48,9 @@ export const DONATION_ABI = [
 ];
 
 export const getDonationContract = async (signer: ethers.Signer) => {
-  return new ethers.Contract(WILDLIFE_DAO_ADDRESS, DONATION_ABI, signer);
+  return new ethers.Contract(
+    "0x526E3592154b4462c8C3BD757f742884027052CF", // Updated WildlifeDAO address
+    DONATION_ABI,
+    signer
+  );
 };
