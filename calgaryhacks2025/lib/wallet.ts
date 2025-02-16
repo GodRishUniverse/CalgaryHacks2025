@@ -1,20 +1,14 @@
-import { createPublicClient, http } from 'viem';
-import { mainnet } from 'viem/chains';
-import { createConfig, configureChains } from 'wagmi';
-import { MetaMaskConnector } from 'wagmi/connectors/metaMask';
-import { publicProvider } from 'wagmi/providers/public';
+import { createConfig } from 'wagmi';
+import { sepolia } from 'viem/chains';
+import { http, createTransport } from 'viem';
+import { injected } from 'wagmi/connectors';
 
-// Configure chains and providers
-const { chains, publicClient } = configureChains(
-  [mainnet],
-  [publicProvider()]
-);
-
-// Create wagmi config
 export const config = createConfig({
-  autoConnect: true, // This enables auto-reconnection
-  connectors: [
-    new MetaMaskConnector({ chains }),
-  ],
-  publicClient,
-}); 
+  chains: [sepolia],
+  connectors: [injected()],
+  transports: {
+    [sepolia.id]: http()
+  },
+});
+
+export const wagmiConfig = config; 

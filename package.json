@@ -3,6 +3,10 @@
     "@openzeppelin/contracts": "^5.2.0",
     "@supabase/auth-ui-react": "^0.4.7",
     "@supabase/auth-ui-shared": "^0.1.8",
-    "@supabase/supabase-js": "^2.48.1"
+    "@supabase/supabase-js": "^2.48.1",
+    "@wagmi/connectors": "^5.7.7",
+    "@wagmi/core": "^2.16.4",
+    "viem": "^2.23.2",
+    "wagmi": "^2.14.11"
   }
 }
