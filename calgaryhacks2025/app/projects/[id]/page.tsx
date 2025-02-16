@@ -275,46 +275,50 @@ export default function ProjectDetailPage() {
     }
   };
 
-  const handleVote = async (projectId: string, support: boolean) => {
+  const handleVote = async (projectId: number, support: boolean) => {
     try {
       if (!window.ethereum) {
         alert("Please connect MetaMask first");
         return;
       }
 
-      const provider = new ethers.BrowserProvider(window.ethereum);
+      const provider = new ethers.BrowserProvider(checkEthereum());
       const signer = await provider.getSigner();
       const daoContract = await getWildlifeDAOContract(signer);
 
-      // Send vote transaction
-      const tx = await daoContract.voteOnProject(projectId, support);
-      console.log("Vote transaction sent:", tx.hash);
+      console.log("Sending vote transaction...");
+      console.log("Project ID:", projectId);
+      console.log("Support:", support);
 
-      // Wait for confirmation
+      // Call the voteOnProject function from our smart contract
+      const tx = await daoContract.voteOnProject(projectId, support);
+      console.log("Transaction sent:", tx.hash);
+
+      // Wait for the transaction to be mined
       const receipt = await tx.wait();
-      
-      // Look for VoteCast event
+      console.log("Transaction mined:", receipt);
+
+      // Find the VoteCast event in the receipt
       const voteCastEvent = receipt.logs.find(
-        (log: any) => log.fragment?.name === "VoteCast"
+        (log: any) => log.eventName === "VoteCast"
       );
 
       if (voteCastEvent) {
-        const { voter, support: voteCast, votingPower } = voteCastEvent.args;
-        console.log("Vote cast:", {
-          voter,
-          support: voteCast,
-          power: votingPower.toString()
-        });
+        console.log("Vote cast event:", voteCastEvent);
+        // Refresh the project data
+        await fetchProjectData(projectId);
 
-        // Update UI to show vote was cast
-        alert(`Vote cast successfully! Power: ${Number(votingPower)/100}%`);
-        
-        // Refresh project data to show updated vote counts
-        await fetchProjectData(Number(projectId));
+        alert("Vote cast successfully!");
       }
     } catch (error: any) {
       console.error("Error casting vote:", error);
-      alert(`Failed to cast vote: ${error.message}`);
+      if (error.message.includes("execution reverted")) {
+        alert(
+          "Transaction failed. Make sure you have enough WLD tokens and haven't already voted."
+        );
+      } else {
+        alert("Error casting vote. Please try again.");
+      }
     }
   };
 
@@ -523,7 +527,7 @@ export default function ProjectDetailPage() {
                   {/* Voting Buttons */}
                   <div className="flex gap-6">
                     <button
-                      onClick={() => handleVote(project.id.toString(), true)}
+                      onClick={() => handleVote(project.id, true)}
                       disabled={isVotingEnded(project.votingEndTime)}
                       className={`flex-1 py-4 rounded-xl font-bold text-lg
                       transition-all transform hover:scale-105
@@ -536,7 +540,7 @@ export default function ProjectDetailPage() {
                       Support Project
                     </button>
                     <button
-                      onClick={() => handleVote(project.id.toString(), false)}
+                      onClick={() => handleVote(project.id, false)}
                       disabled={isVotingEnded(project.votingEndTime)}
                       className={`flex-1 py-4 rounded-xl font-bold text-lg
                       transition-all transform hover:scale-105

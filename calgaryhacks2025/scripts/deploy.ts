@@ -4,15 +4,11 @@ async function main() {
   try {
     const [deployer] = await ethers.getSigners();
     console.log("Deploying contracts with the account:", deployer.address);
-    console.log(
-      "Account balance:",
-      (await deployer.provider.getBalance(deployer.address)).toString()
-    );
+    console.log("Account balance:", (await deployer.provider.getBalance(deployer.address)).toString());
 
     // Deploy WildlifeDAOToken first
     console.log("Deploying WildlifeDAOToken...");
-    const WildlifeDAOToken =
-      await ethers.getContractFactory("WildlifeDAOToken");
+    const WildlifeDAOToken = await ethers.getContractFactory("WildlifeDAOToken");
     const token = await WildlifeDAOToken.deploy();
     await token.waitForDeployment();
     const tokenAddress = await token.getAddress();
@@ -35,7 +31,7 @@ async function main() {
     console.log("\nDeployment complete! 🎉");
     console.log("Token address:", tokenAddress);
     console.log("DAO address:", daoAddress);
-
+    
     // Save these addresses - we'll need them for the frontend
   } catch (error) {
     console.error("Deployment failed:", error);
@@ -48,4 +44,4 @@ main()
   .catch((error) => {
     console.error(error);
     process.exit(1);
-  });
+  }); 
