@@ -88,7 +88,7 @@ scoring_chain = (
     }
     | scoring_prompt
     | ChatOpenAI(
-        temperature=0,
+        temperature=0.2,
         model="gpt-4o-mini",
         model_kwargs={"response_format": {"type": "json_object"}},
     )
