@@ -20,7 +20,7 @@ Focus on:
 - Ecological challenges
 
 Return ONLY a comma-separated list, no commentary.
-If you find the information insufficient, enter 'insufficient'.
+When you have insufficient information, enter 'insufficient'. Generally when there is insufficient information, it will not be descriptive. Make sure to analyze it using the content and the context.
 
 Project Text:
 {project_text}
