@@ -43,52 +43,45 @@ const TOP_PROJECTS = [
 
 const FAQ_ITEMS = [
   {
-    question: "How does quadratic voting work?",
-    answer:
-      "Quadratic voting ensures fair governance by making each additional vote cost more than the previous one. For example, 1 vote costs 1 token, 2 votes cost 4 tokens, 3 votes cost 9 tokens, and so on. This prevents wealthy donors from having disproportionate influence.",
+    question: "How does the voting system work?",
+    answer: "Each WLD token represents one vote. Projects need majority support and minimum participation to pass. Voting periods last 7 days, and results are recorded on the blockchain for transparency.",
   },
   {
     question: "What happens after I donate?",
-    answer:
-      "When you donate, you receive WildlifeDAO Tokens (WLD) proportional to your contribution. These tokens give you voting power to influence which conservation projects receive funding. All transactions are recorded on the blockchain for complete transparency.",
+    answer: "Your ETH donation is converted to WLD tokens at a rate of 1 WLD per $1. These tokens give you voting power to influence which conservation projects receive funding. All transactions are recorded on the blockchain.",
   },
   {
     question: "How are projects validated?",
-    answer:
-      "Each project undergoes a rigorous two-phase validation process. First, it must receive approval from at least two authorized validators. Then, it moves to community voting where token holders can participate in funding decisions.",
+    answer: "Projects undergo AI analysis for viability scoring and community voting. The AI evaluates factors like scientific alignment, biodiversity impact, and sustainability. Community members then vote using their WLD tokens.",
   },
 ];
 
 const STATISTICS = [
-  { number: "1.2M", label: "Total Donations" },
-  { number: "156", label: "Projects Funded" },
-  { number: "45K", label: "Active Donors" },
-  { number: "92%", label: "Success Rate" },
+  { number: "$1.2M", label: "Total Value Locked" },
+  { number: "156", label: "Active Projects" },
+  { number: "45K", label: "WLD Holders" },
+  { number: "92%", label: "Project Success Rate" },
 ];
 
 const HOW_IT_WORKS_STEPS = [
   {
     title: "Make a Donation",
-    description:
-      "Contribute to wildlife conservation using traditional payment methods or cryptocurrency.",
+    description: "Contribute ETH to receive WLD governance tokens.",
     icon: "💰",
   },
   {
     title: "Receive WLD Tokens",
-    description:
-      "Get governance tokens proportional to your donation (1 USD = 100 WLD).",
+    description: "Get 1 WLD token for every $1 worth of ETH donated.",
     icon: "🎫",
   },
   {
     title: "Vote on Projects",
-    description:
-      "Use your tokens to support conservation projects through quadratic voting.",
+    description: "Use your WLD tokens to support conservation projects through voting.",
     icon: "✋",
   },
   {
     title: "Track Impact",
-    description:
-      "Monitor project progress and see your contribution's direct impact.",
+    description: "Monitor project progress and voting results on-chain.",
     icon: "📊",
   },
 ];
@@ -303,12 +296,7 @@ export default function Home() {
             </ul>
           </div>
           <div className="relative h-96">
-            <Image
-              src="/blockchain-graphic.png"
-              alt="Blockchain Technology"
-              fill
-              className="object-contain"
-            />
+            
           </div>
         </div>
       </div>
