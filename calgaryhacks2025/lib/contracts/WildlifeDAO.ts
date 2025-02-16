@@ -144,6 +144,45 @@ export const WILDLIFE_DAO_ABI = [
     stateMutability: "payable",
     type: "function",
   },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "projectId",
+        "type": "uint256"
+      }
+    ],
+    "name": "getProjectState",
+    "outputs": [
+      {
+        "internalType": "enum ProjectStatus",
+        "name": "status",
+        "type": "uint8"
+      },
+      {
+        "internalType": "uint256",
+        "name": "votingStartTime",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "votingEndTime",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "forVotes",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "againstVotes",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
 ];
 
 export const PROPOSAL_ABI = [

@@ -92,6 +92,31 @@ function getProjectEmoji(title: string): string {
   return "🌍"; // Default emoji for other conservation projects
 }
 
+// Add this function to fetch voting data for a project
+const fetchProjectVotes = async (project: Project) => {
+  try {
+    if (!window.ethereum || !project.onchain_id) return null;
+
+    const provider = new ethers.BrowserProvider(window.ethereum as any);
+    const signer = await provider.getSigner();
+    const daoContract = await getWildlifeDAOContract(signer);
+
+    // Get voting data from the contract
+    const state = await daoContract.getProjectState(BigInt(project.onchain_id));
+    console.log("Project state from contract:", state);
+    
+    return {
+      forVotes: Number(state[3]), // forVotes is the 4th return value
+      againstVotes: Number(state[4]), // againstVotes is the 5th return value
+      votingStartTime: Number(state[1]), // votingStartTime is the 2nd return value
+      votingEndTime: Number(state[2]) // votingEndTime is the 3rd return value
+    };
+  } catch (error) {
+    console.error("Error fetching project votes:", error);
+    return null;
+  }
+};
+
 export default function ProjectsPage() {
   const [user, setUser] = useState<any>(null);
   const [tokenBalance, setTokenBalance] = useState<string>("0");
@@ -217,7 +242,6 @@ export default function ProjectsPage() {
       try {
         console.log("Fetching projects from Supabase...");
         
-        // Get projects from Supabase without status filter
         const { data: dbProjects, error } = await supabase
           .from("projects")
           .select("*")
@@ -230,18 +254,22 @@ export default function ProjectsPage() {
 
         console.log("Fetched projects:", dbProjects);
 
-        // Map the projects to include voting info
-        const allProjects = dbProjects.map((project) => ({
-          ...project,
-          forVotes: 0,
-          againstVotes: 0,
-          votingEnds: new Date(project.created_at).getTime() + (7 * 24 * 60 * 60 * 1000), // 7 days from creation
-          votingStartTime: new Date(project.created_at).getTime(),
-          votingEndTime: new Date(project.created_at).getTime() + (7 * 24 * 60 * 60 * 1000)
-        }));
+        // Fetch voting data for each project
+        const projectsWithVotes = await Promise.all(
+          dbProjects.map(async (project) => {
+            const votes = await fetchProjectVotes(project);
+            return {
+              ...project,
+              forVotes: votes?.forVotes || 0,
+              againstVotes: votes?.againstVotes || 0,
+              votingStartTime: votes?.votingStartTime || new Date(project.created_at).getTime(),
+              votingEndTime: votes?.votingEndTime || new Date(project.created_at).getTime() + (7 * 24 * 60 * 60 * 1000)
+            };
+          })
+        );
 
-        console.log("Processed projects:", allProjects);
-        setProjects(allProjects);
+        console.log("Projects with votes:", projectsWithVotes);
+        setProjects(projectsWithVotes);
       } catch (error) {
         console.error("Error fetching projects:", error);
       } finally {
@@ -294,8 +322,23 @@ export default function ProjectsPage() {
       console.log("Transaction confirmed:", receipt);
 
       if (receipt && receipt.status === 1) {
+        // Fetch updated votes for this project
+        const updatedVotes = await fetchProjectVotes(project);
+        
+        // Update the projects state with new voting data
+        setProjects(currentProjects => 
+          currentProjects.map(p => 
+            p.id === project.id
+              ? {
+                  ...p,
+                  forVotes: updatedVotes?.forVotes || p.forVotes,
+                  againstVotes: updatedVotes?.againstVotes || p.againstVotes
+                }
+              : p
+          )
+        );
+
         alert(`Successfully voted ${support ? "for" : "against"} the project!`);
-        window.location.reload();
       }
 
     } catch (error: any) {
@@ -415,18 +458,13 @@ export default function ProjectsPage() {
                       {/* Voting Stats */}
                       <div className="flex justify-between text-sm text-gray-600">
                         <span className="text-green-600 font-medium">
-                          Support: {(project.forVotes / 100).toFixed(1)}%
+                          Support: {((project.forVotes * 100) / (project.forVotes + project.againstVotes || 1)).toFixed(1)}%
                         </span>
                         <span className="text-gray-600">
-                          Participation:{" "}
-                          {(
-                            (project.forVotes + project.againstVotes) /
-                            100
-                          ).toFixed(1)}
-                          %
+                          Participation: {(((project.forVotes + project.againstVotes) * 100) / 10000).toFixed(1)}%
                         </span>
                         <span className="text-red-600 font-medium">
-                          Against: {(project.againstVotes / 100).toFixed(1)}%
+                          Against: {((project.againstVotes * 100) / (project.forVotes + project.againstVotes || 1)).toFixed(1)}%
                         </span>
                       </div>
 
