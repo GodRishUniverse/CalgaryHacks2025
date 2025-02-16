@@ -9,9 +9,13 @@ contract WildlifeDAOToken is ERC20, Ownable {
 
     event TokensMinted(address indexed recipient, uint256 amount);
 
-    constructor() ERC20("WildlifeDAO Token", "WLD") Ownable(msg.sender) {}
+    constructor() ERC20("WildlifeDAO Token", "WLD") Ownable(msg.sender) {
+        // Maybe we should mint some initial tokens to the owner
+        _mint(msg.sender, 1000000 * 10**decimals()); // Mint 1M tokens initially
+    }
 
     function setDAOContract(address _daoContract) external onlyOwner {
+        require(_daoContract != address(0), "Invalid DAO address");
         daoContract = _daoContract;
     }
 
@@ -20,7 +24,7 @@ contract WildlifeDAOToken is ERC20, Ownable {
         require(recipient != address(0), "Invalid recipient address");
         require(amount > 0, "Mint amount must be greater than zero");
 
-        _mint(recipient, amount);
+        _mint(recipient, amount * 10**decimals()); // Convert to proper decimals
         emit TokensMinted(recipient, amount);
     }
 } 

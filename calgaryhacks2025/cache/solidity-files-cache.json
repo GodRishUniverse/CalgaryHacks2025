@@ -2,8 +2,8 @@
   "_format": "hh-sol-cache-2",
   "files": {
     "/Users/samuelergando/CalgaryHacks2025/calgaryhacks2025/contracts/WildlifeDAO.sol": {
-      "lastModificationDate": 1739667056220,
-      "contentHash": "02fab76bad4b83bd467e96bfa9455047",
+      "lastModificationDate": 1739672444248,
+      "contentHash": "07b04db18a8cb8f5a4249307ae0b9102",
       "sourceName": "contracts/WildlifeDAO.sol",
       "solcConfig": {
         "version": "0.8.20",
@@ -42,8 +42,8 @@
       ]
     },
     "/Users/samuelergando/CalgaryHacks2025/calgaryhacks2025/contracts/WildlifeDAOToken.sol": {
-      "lastModificationDate": 1739667050381,
-      "contentHash": "dd22309f3c889babfb4be13871784eca",
+      "lastModificationDate": 1739672438611,
+      "contentHash": "15dd68fd198b42de3c64b16f827f95d4",
       "sourceName": "contracts/WildlifeDAOToken.sol",
       "solcConfig": {
         "version": "0.8.20",
