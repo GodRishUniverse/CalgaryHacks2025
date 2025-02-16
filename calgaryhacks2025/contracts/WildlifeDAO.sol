@@ -17,17 +17,17 @@ contract WildlifeDAO is Ownable {
     uint256 public constant VOTE_COST = 10 * 10**18; // 10 WLD to create a proposal
     uint256 public constant MIN_VOTE_POWER = 100 * 10**18; // Need 100 WLD to vote
     uint256 public constant VOTING_PERIOD = 7 days;
-    uint256 public constant AUTO_VALIDATION_PERIOD = 1 minutes;  // 1 minute for MVP
+    uint256 public constant AUTO_VALIDATION_PERIOD = 1 minutes;  // 1 minute for auto-validation
 
     // Validator management
     mapping(address => bool) public validators;
     uint256 public minValidationsRequired = 2; // Minimum validators needed to approve
 
     enum ProjectStatus {
-        Pending,    // Just submitted
-        Validating, // Under validator review
-        Approved,   // Approved by validators
-        Rejected,   // Rejected by validators
+        Pending,    // Initial state
+        Validating, // Under auto-validation
+        Approved,   // Ready for voting
+        Rejected,   // Rejected by validators or vote
         Executed    // Proposal passed and executed
     }
 
@@ -39,9 +39,9 @@ contract WildlifeDAO is Ownable {
         uint256 fundingReceived;
         uint256 validationCount;
         ProjectStatus status;
-        uint256 submissionTime;    // Add this field
+        uint256 submissionTime;
         mapping(address => bool) validatedBy;
-        mapping(address => uint256) contributions; // Track individual contributions
+        mapping(address => uint256) contributions;
         mapping(address => VoteInfo) votes;
         uint256 forVotes;
         uint256 againstVotes;
@@ -52,64 +52,55 @@ contract WildlifeDAO is Ownable {
 
     struct VoteInfo {
         bool hasVoted;
-        uint256 votingPower;  // Represents the voter's token balance at time of vote
+        uint256 votingPower;
         bool support;
     }
 
     mapping(uint256 => Project) public projects;
     uint256 public projectCount;
-
-    // Add a mapping to track proposals by their IDs
     mapping(string => uint256) public proposalIdToProjectId;
 
-    event ValidatorAdded(address indexed validator);
-    event ValidatorRemoved(address indexed validator);
-    event ProjectSubmitted(
+    // Updated events
+    event ProposalSubmitted(
         uint256 indexed projectId,
-        address indexed proposer,
+        address indexed submitter,
         string title,
-        uint256 fundingRequired
+        uint256 fundingRequired,
+        ProjectStatus status
     );
-    event ProjectValidated(
+
+    event ProjectStatusChanged(
         uint256 indexed projectId,
-        address indexed validator,
-        uint256 currentValidations
-    );
-    event ProjectStatusUpdated(
-        uint256 indexed projectId,
+        ProjectStatus oldStatus,
         ProjectStatus newStatus
     );
+
     event DonationReceived(
         address indexed donor,
         uint256 usdAmount,
         uint256 wldMinted,
         uint256 daoFeeAmount
     );
-    event ProjectContribution(
-        uint256 indexed projectId,
-        address indexed contributor,
-        uint256 amount,
-        uint256 tokensBurned,
-        uint256 totalFunding
-    );
+
     event VoteCast(
         uint256 indexed projectId,
         address indexed voter,
         bool support,
         uint256 votingPower
     );
-    event ProjectStatusChanged(
+
+    // Add event for debugging
+    event ValidationCheck(
         uint256 indexed projectId,
-        ProjectStatus oldStatus,
-        ProjectStatus newStatus
+        uint256 currentTime,
+        uint256 submissionTime,
+        uint256 validationPeriod
     );
-    event ProposalSubmitted(
-        string proposalId,
-        uint256 projectId,
-        address submitter,
-        string title,
-        uint256 fundingRequired,
-        string status
+
+    event VotingStarted(
+        uint256 indexed projectId,
+        uint256 startTime,
+        uint256 endTime
     );
 
     modifier onlyValidator() {
@@ -122,23 +113,19 @@ contract WildlifeDAO is Ownable {
         wldToken = WildlifeDAOToken(_wldToken);
         // Add deployer as first validator
         validators[msg.sender] = true;
-        emit ValidatorAdded(msg.sender);
     }
 
     // Validator management
     function addValidator(address validator) external onlyOwner {
         require(!validators[validator], "Already a validator");
         validators[validator] = true;
-        emit ValidatorAdded(validator);
     }
 
     function removeValidator(address validator) external onlyOwner {
         require(validators[validator], "Not a validator");
         validators[validator] = false;
-        emit ValidatorRemoved(validator);
     }
 
-    // Project submission and validation
     function submitProject(
         string memory proposalId,
         string memory title,
@@ -156,71 +143,57 @@ contract WildlifeDAO is Ownable {
         project.description = description;
         project.fundingRequired = fundingRequired;
         project.proposer = msg.sender;
-        project.status = ProjectStatus.Pending;
+        project.status = ProjectStatus.Approved;
         project.submissionTime = block.timestamp;
-        project.validationCount = 0;
+        project.votingStartTime = block.timestamp;
+        project.votingEndTime = block.timestamp + VOTING_PERIOD;
 
         proposalIdToProjectId[proposalId] = projectId;
 
         emit ProposalSubmitted(
-            proposalId,
             projectId,
             msg.sender,
             title,
             fundingRequired,
-            "Pending"
+            ProjectStatus.Approved
+        );
+
+        emit ProjectStatusChanged(
+            projectId,
+            ProjectStatus.Pending,
+            ProjectStatus.Approved
+        );
+
+        emit VotingStarted(
+            projectId,
+            project.votingStartTime,
+            project.votingEndTime
         );
 
         return projectId;
     }
 
-    function validateProject(uint256 projectId) external onlyValidator {
-        Project storage project = projects[projectId];
-        require(project.status == ProjectStatus.Pending, "Invalid project status");
-        require(!project.validatedBy[msg.sender], "Already validated");
-
-        project.validatedBy[msg.sender] = true;
-        project.validationCount++;
-
-        emit ProjectValidated(projectId, msg.sender, project.validationCount);
-
-        // Key part: When enough validators approve, voting period starts automatically
-        if (project.validationCount >= minValidationsRequired) {
-            project.status = ProjectStatus.Approved;
-            project.votingStartTime = block.timestamp;  // Start voting now
-            project.votingEndTime = block.timestamp + VOTING_PERIOD;  // End in 7 days
-            emit ProjectStatusChanged(projectId, ProjectStatus.Pending, ProjectStatus.Approved);
-        }
-    }
-
-    function rejectProject(uint256 projectId) external onlyValidator {
-        Project storage project = projects[projectId];
-        require(project.status == ProjectStatus.Pending || 
-                project.status == ProjectStatus.Validating, "Invalid project status");
-        
-        project.status = ProjectStatus.Rejected;
-        emit ProjectStatusUpdated(projectId, ProjectStatus.Rejected);
-    }
-
-    // Regular donation function
     function donate(uint256 _usdAmount, address _recipient) external payable {
         require(_usdAmount >= MIN_DONATION, "Donation too small");
         require(_usdAmount <= MAX_DONATION, "Donation too large");
         require(_recipient != address(0), "Invalid recipient");
 
-        // Calculate WLD tokens to mint (1:1 ratio with USD)
-        uint256 wldToMint = _usdAmount * 10**18; // Convert to wei
-        
-        try wldToken.mintWLD(_recipient, wldToMint) {
-            totalValueLocked += _usdAmount;
-            totalWLD += wldToMint;
-            emit DonationReceived(msg.sender, _usdAmount, wldToMint, 0);
-        } catch Error(string memory reason) {
-            revert(string(abi.encodePacked("Minting failed: ", reason)));
+        uint256 wldToMint = _usdAmount * 10**18;
+        uint256 daoFee = (wldToMint * DAO_FEE) / 10000;
+        uint256 userAmount = wldToMint - daoFee;
+
+        totalValueLocked += _usdAmount;
+        totalWLD += wldToMint;
+
+        // Mint tokens
+        wldToken.mintWLD(_recipient, userAmount);
+        if (daoFee > 0) {
+            wldToken.mintWLD(owner(), daoFee);
         }
+
+        emit DonationReceived(msg.sender, _usdAmount, wldToMint, daoFee);
     }
 
-    // Proportional voting based on token ownership
     function voteOnProject(uint256 projectId, bool support) external {
         Project storage project = projects[projectId];
         require(project.status == ProjectStatus.Approved, "Project not in voting phase");
@@ -230,93 +203,67 @@ contract WildlifeDAO is Ownable {
         uint256 voterBalance = wldToken.balanceOf(msg.sender);
         require(voterBalance >= MIN_VOTE_POWER, "Insufficient voting power");
 
-        // Calculate voting power
         uint256 totalSupply = wldToken.totalSupply();
-        uint256 votingPower = (voterBalance * 10000) / totalSupply; // basis points (100 = 1%)
+        uint256 votingPower = (voterBalance * 10000) / totalSupply;
 
-        // Record vote
         project.votes[msg.sender] = VoteInfo({
             hasVoted: true,
             votingPower: votingPower,
             support: support
         });
 
-        // Update vote tallies
         if (support) {
             project.forVotes += votingPower;
         } else {
             project.againstVotes += votingPower;
         }
 
+        // Emit vote cast event
         emit VoteCast(projectId, msg.sender, support, votingPower);
 
-        // Check if we can finalize the vote
+        // Check if voting is complete
         _checkVoteOutcome(projectId);
     }
 
     function _checkVoteOutcome(uint256 projectId) internal {
         Project storage project = projects[projectId];
         
-        // Only check if voting period has ended
         if (block.timestamp > project.votingEndTime) {
             uint256 totalVotes = project.forVotes + project.againstVotes;
-            uint256 quorum = 3000; // 30% quorum requirement
+            uint256 quorum = 3000; // 30% quorum
 
             if (totalVotes >= quorum) {
-                if (project.forVotes > project.againstVotes) {
-                    project.status = ProjectStatus.Executed;
-                } else {
-                    project.status = ProjectStatus.Rejected;
-                }
+                ProjectStatus newStatus = project.forVotes > project.againstVotes 
+                    ? ProjectStatus.Executed 
+                    : ProjectStatus.Rejected;
+                
                 emit ProjectStatusChanged(
-                    projectId, 
-                    ProjectStatus.Approved, 
-                    project.status
+                    projectId,
+                    project.status,
+                    newStatus
                 );
+                
+                project.status = newStatus;
             }
         }
     }
 
-    // Modify quadratic voting to be contribution-based
-    function quadraticContribute(uint256 projectId, uint256 numVotes) external {
+    // View functions
+    function getProjectStatus(uint256 projectId) external view returns (
+        ProjectStatus status,
+        uint256 submissionTime,
+        uint256 votingStartTime,
+        uint256 votingEndTime
+    ) {
         Project storage project = projects[projectId];
-        require(project.status == ProjectStatus.Approved, "Project not approved");
-        require(project.fundingReceived < project.fundingRequired, "Funding goal reached");
-        
-        // Calculate total cost in WLD tokens
-        uint256 contributionCost = calculateVoteCost(numVotes);
-        
-        // Check user has enough tokens
-        require(wldToken.balanceOf(msg.sender) >= contributionCost, "Insufficient WLD balance");
-        
-        // Burn the tokens as contribution
-        wldToken.burnFrom(msg.sender, contributionCost);
-        
-        // Record the contribution
-        project.contributions[msg.sender] += numVotes;
-        project.fundingReceived += numVotes;
-        
-        // Check if project is fully funded
-        if (project.fundingReceived >= project.fundingRequired) {
-            project.status = ProjectStatus.Executed;
-            emit ProjectStatusUpdated(projectId, ProjectStatus.Executed);
-        }
-        
-        emit ProjectContribution(
-            projectId,
-            msg.sender,
-            numVotes,
-            contributionCost,
-            project.fundingReceived
+        return (
+            project.status,
+            project.submissionTime,
+            project.votingStartTime,
+            project.votingEndTime
         );
     }
 
-    // Cost increases quadratically with number of votes
-    function calculateVoteCost(uint256 numVotes) public pure returns (uint256) {
-        return numVotes * numVotes * (1 * 10**18); // Cost in WLD tokens
-    }
-
-    // Add getter functions for frontend
     function getProjectVotes(uint256 projectId) external view returns (
         uint256 forVotes,
         uint256 againstVotes,
@@ -326,75 +273,6 @@ contract WildlifeDAO is Ownable {
         return (
             project.forVotes,
             project.againstVotes,
-            project.votingEndTime
-        );
-    }
-
-    function hasVoted(uint256 projectId, address voter) external view returns (bool) {
-        return projects[projectId].votes[voter].hasVoted;
-    }
-
-    // Add function to get project by proposal ID
-    function getProjectByProposalId(string memory proposalId) 
-        external 
-        view 
-        returns (
-            uint256 projectId,
-            string memory title,
-            address proposer,
-            ProjectStatus status
-        ) 
-    {
-        projectId = proposalIdToProjectId[proposalId];
-        require(projectId != 0, "Proposal not found");
-        
-        Project storage project = projects[projectId];
-        return (
-            projectId,
-            project.title,
-            project.proposer,
-            project.status
-        );
-    }
-
-    // Add function to check and auto-validate projects
-    function checkAndAutoValidate(uint256 projectId) external {
-        Project storage project = projects[projectId];
-        require(project.status == ProjectStatus.Pending, "Project not pending");
-        require(
-            block.timestamp >= project.submissionTime + AUTO_VALIDATION_PERIOD,
-            "Validation period not ended"
-        );
-
-        // Auto-validate and start voting period
-        project.status = ProjectStatus.Approved;
-        project.votingStartTime = block.timestamp;
-        project.votingEndTime = block.timestamp + VOTING_PERIOD;
-
-        emit ProjectStatusChanged(
-            projectId,
-            ProjectStatus.Pending,
-            ProjectStatus.Approved
-        );
-    }
-
-    // Add getter function for proposal status
-    function getProposalStatus(string memory proposalId) external view returns (
-        uint256 projectId,
-        ProjectStatus status,
-        uint256 submissionTime,
-        uint256 votingStartTime,
-        uint256 votingEndTime
-    ) {
-        projectId = proposalIdToProjectId[proposalId];
-        require(projectId != 0, "Proposal not found");
-        
-        Project storage project = projects[projectId];
-        return (
-            projectId,
-            project.status,
-            project.submissionTime,
-            project.votingStartTime,
             project.votingEndTime
         );
     }

@@ -10,16 +10,14 @@ import { getWildlifeDAOContract } from "@/lib/contracts/WildlifeDAO";
 import Link from "next/link";
 
 interface Project {
-  id: number;
+  id: string;
   title: string;
   description: string;
-  fundingRequired: number;
-  status: "Pending" | "Validating" | "Approved" | "Rejected" | "Executed";
-  forVotes: number;
-  againstVotes: number;
-  votingEnds: Date;
-  votingStartTime: number;
-  votingEndTime: number;
+  funding_required: number;
+  status: string;
+  contract_project_id: string;
+  location: string;
+  created_at: string;
 }
 
 // Helper function for formatting time
@@ -40,51 +38,45 @@ function formatTimeRemaining(endDate: Date): string {
 
 const MOCK_PROJECTS: Project[] = [
   {
-    id: 1,
+    id: "1",
     title: "Sumatran Rhino Conservation",
     description:
       "Protecting the critically endangered Sumatran rhinos through habitat preservation and anti-poaching measures.",
-    fundingRequired: 60000,
+    funding_required: 60000,
     status: "Approved",
-    forVotes: 4500,
-    againstVotes: 2500,
-    votingEnds: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000), // 3 days from now
-    votingStartTime: Date.now(),
-    votingEndTime: Date.now() + 3 * 24 * 60 * 60 * 1000,
+    contract_project_id: "1",
+    location: "Sumatra, Indonesia",
+    created_at: new Date().toISOString(),
   },
   {
-    id: 2,
+    id: "2",
     title: "Amazon Rainforest Protection",
     description:
       "Supporting indigenous communities in protecting their ancestral forests from illegal logging.",
-    fundingRequired: 150000,
+    funding_required: 150000,
     status: "Approved",
-    forVotes: 6000,
-    againstVotes: 1500,
-    votingEnds: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000), // 5 days from now
-    votingStartTime: Date.now(),
-    votingEndTime: Date.now() + 5 * 24 * 60 * 60 * 1000,
+    contract_project_id: "2",
+    location: "Amazon Basin, South America",
+    created_at: new Date().toISOString(),
   },
   {
-    id: 3,
+    id: "3",
     title: "Arctic Fox Habitat Preservation",
     description:
       "Establishing protected areas for Arctic fox breeding grounds in Iceland.",
-    fundingRequired: 50000,
+    funding_required: 50000,
     status: "Approved",
-    forVotes: 3000,
-    againstVotes: 2000,
-    votingEnds: new Date(Date.now() + 24 * 60 * 60 * 1000), // 1 day from now
-    votingStartTime: Date.now(),
-    votingEndTime: Date.now() + 24 * 60 * 60 * 1000,
+    contract_project_id: "3",
+    location: "Iceland",
+    created_at: new Date().toISOString(),
   },
 ];
 
 // Add this helper function at the top of the file
 function getVotingTimeStatus(project: Project) {
   const now = new Date();
-  const endTime = new Date(project.votingEndTime);
-  const startTime = new Date(project.votingStartTime);
+  const endTime = new Date(project.created_at);
+  const startTime = new Date(project.created_at);
 
   if (now > endTime) {
     return {
@@ -132,6 +124,8 @@ function getProjectEmoji(title: string): string {
 }
 
 export default function ProjectsPage() {
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<any>(null);
   const [tokenBalance, setTokenBalance] = useState<string>("0");
   const [totalSupply, setTotalSupply] = useState<string>("0");
@@ -139,6 +133,24 @@ export default function ProjectsPage() {
   const [totalValueLocked, setTotalValueLocked] = useState<string>("0");
   const router = useRouter();
   const [now, setNow] = useState(new Date());
+
+  const fetchProjects = async () => {
+    try {
+      // Only fetch approved projects
+      const { data, error } = await supabase
+        .from("projects")
+        .select("*")
+        .eq("status", "Approved")
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+      setProjects(data || []);
+    } catch (error) {
+      console.error("Error fetching projects:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const fetchTokenInfo = async (walletAddress: string) => {
     try {
@@ -249,7 +261,11 @@ export default function ProjectsPage() {
     return () => clearInterval(timer);
   }, []);
 
-  const handleVote = async (projectId: number, support: boolean) => {
+  useEffect(() => {
+    fetchProjects();
+  }, []);
+
+  const handleVote = async (projectId: string, support: boolean) => {
     try {
       if (!window.ethereum) {
         alert("Please connect MetaMask first");
@@ -296,6 +312,18 @@ export default function ProjectsPage() {
     }
   };
 
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-white py-12">
+        <div className="container mx-auto px-4">
+          <h1 className="text-4xl font-bold mb-8 text-center bg-clip-text text-transparent bg-gradient-to-r from-pink-500 to-rose-400">
+            Loading Projects...
+          </h1>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <AuthGuard>
       <div className="min-h-screen bg-white">
@@ -331,141 +359,101 @@ export default function ProjectsPage() {
           </div>
 
           {/* Projects Grid */}
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {MOCK_PROJECTS.map((project) => (
-              <Link
-                href={`/projects/${project.id}`}
-                key={project.id}
-                className="block transition-transform hover:scale-105"
-              >
-                <div className="bg-white rounded-xl overflow-hidden border border-gray-200 hover:border-pink-300 transition-all shadow-md">
-                  <div className="p-6">
-                    <div className="flex justify-between items-start mb-4">
-                      <h3 className="text-xl font-semibold text-gray-800 flex items-center gap-2">
-                        <span>{getProjectEmoji(project.title)}</span>
-                        {project.title}
-                      </h3>
-                      <span className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm">
-                        {project.status}
-                      </span>
+          <div className="flex justify-between items-center mb-8">
+            <h1 className="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-pink-500 to-rose-400">
+              Active Projects
+            </h1>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {projects.map((project) => {
+              const votingStatus = getVotingTimeStatus(project);
+              const projectEmoji = getProjectEmoji(project.title);
+              
+              return (
+                <Link
+                  key={project.id}
+                  href={`/projects/${project.contract_project_id}`}
+                  className="block p-6 bg-white rounded-lg shadow-lg hover:shadow-xl transition-shadow border border-gray-100"
+                >
+                  <div className="flex justify-between items-start mb-2">
+                    <h2 className="text-xl font-semibold text-gray-900">
+                      <span className="mr-2">{projectEmoji}</span>
+                      {project.title}
+                    </h2>
+                  </div>
+                  
+                  <p className="text-gray-600 mb-4 line-clamp-3">
+                    {project.description}
+                  </p>
+
+                  <div className="flex justify-between items-center mb-4">
+                    <span className="text-pink-500 font-medium">
+                      ${project.funding_required.toLocaleString()} USD
+                    </span>
+                    <span className="text-sm text-gray-500">
+                      {project.location}
+                    </span>
+                  </div>
+
+                  {/* Voting Progress Bar */}
+                  <div className="mb-4">
+                    <div className="flex justify-between text-sm mb-1">
+                      <span className="text-gray-600">Voting Progress</span>
+                      <span className="text-gray-900 font-medium">45%</span>
                     </div>
-
-                    <p className="text-gray-600 mb-4">{project.description}</p>
-
-                    <div className="space-y-4">
-                      {/* Funding Required */}
-                      <div className="text-sm text-gray-600">
-                        Funding Required: $
-                        {project.fundingRequired.toLocaleString()}
-                      </div>
-
-                      {/* Voting Progress Bar */}
-                      <div className="relative h-4 bg-gray-100 rounded-full overflow-hidden">
-                        <div
-                          className="absolute left-0 h-full bg-green-500"
-                          style={{ width: `${project.forVotes / 100}%` }}
-                        />
-                        <div
-                          className="absolute right-0 h-full bg-red-500"
-                          style={{ width: `${project.againstVotes / 100}%` }}
-                        />
-                      </div>
-
-                      {/* Voting Stats */}
-                      <div className="flex justify-between text-sm text-gray-600">
-                        <span className="text-green-600 font-medium">
-                          Support: {(project.forVotes / 100).toFixed(1)}%
-                        </span>
-                        <span className="text-gray-600">
-                          Participation:{" "}
-                          {(
-                            (project.forVotes + project.againstVotes) /
-                            100
-                          ).toFixed(1)}
-                          %
-                        </span>
-                        <span className="text-red-600 font-medium">
-                          Against: {(project.againstVotes / 100).toFixed(1)}%
-                        </span>
-                      </div>
-
-                      {/* Voting Buttons */}
-                      <div className="flex gap-4">
-                        <button
-                          onClick={() => handleVote(project.id, true)}
-                          disabled={now > project.votingEnds}
-                          className={`flex-1 px-4 py-3 rounded-lg font-semibold 
-                          text-center transition-colors
-                          ${
-                            now > project.votingEnds
-                              ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                              : "bg-green-500 text-white hover:bg-green-600"
-                          }`}
-                        >
-                          Support
-                        </button>
-                        <button
-                          onClick={() => handleVote(project.id, false)}
-                          disabled={now > project.votingEnds}
-                          className={`flex-1 px-4 py-3 rounded-lg font-semibold 
-                          text-center transition-colors
-                          ${
-                            now > project.votingEnds
-                              ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                              : "bg-red-500 text-white hover:bg-red-600"
-                          }`}
-                        >
-                          Reject
-                        </button>
-                      </div>
-
-                      {/* Voting Period */}
-                      {project.status === "Approved" && (
-                        <div className="mt-4 p-3 bg-gray-50 rounded-lg">
-                          <div className="flex justify-between items-center">
-                            <span className="text-sm font-medium">
-                              Voting Period
-                            </span>
-                            <span
-                              className={`text-sm font-bold ${getVotingTimeStatus(project).color}`}
-                            >
-                              {getVotingTimeStatus(project).status}
-                            </span>
-                          </div>
-                          <div className="mt-2 h-2 bg-gray-200 rounded-full overflow-hidden">
-                            <div
-                              className={`h-full transition-all duration-500 ${
-                                getVotingTimeStatus(project).color.includes(
-                                  "red"
-                                )
-                                  ? "bg-red-500"
-                                  : getVotingTimeStatus(project).color.includes(
-                                        "yellow"
-                                      )
-                                    ? "bg-yellow-500"
-                                    : "bg-green-500"
-                              }`}
-                              style={{
-                                width: `${Math.max(
-                                  0,
-                                  Math.min(
-                                    100,
-                                    ((project.votingEndTime - Date.now()) /
-                                      (7 * 24 * 60 * 60 * 1000)) *
-                                      100
-                                  )
-                                )}%`,
-                              }}
-                            />
-                          </div>
-                        </div>
-                      )}
+                    <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div 
+                        className="bg-gradient-to-r from-pink-500 to-rose-400 h-2 rounded-full" 
+                        style={{ width: '45%' }}
+                      ></div>
                     </div>
                   </div>
-                </div>
-              </Link>
-            ))}
+
+                  <div className="flex items-center justify-between mt-4">
+                    <span className={`px-3 py-1 rounded-full text-sm ${
+                      votingStatus.status === "Active" 
+                        ? "bg-green-100 text-green-800"
+                        : votingStatus.status === "Ending Soon"
+                        ? "bg-yellow-100 text-yellow-800"
+                        : "bg-red-100 text-red-800"
+                    }`}>
+                      {votingStatus.status}
+                    </span>
+                    
+                    <div className="flex flex-col items-end">
+                      <span className="text-sm font-medium text-gray-900">
+                        {votingStatus.timeLeft}
+                      </span>
+                      <span className="text-xs text-gray-500">
+                        {new Date(project.created_at).toLocaleDateString()}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Quick Stats */}
+                  <div className="mt-4 grid grid-cols-2 gap-2 text-sm text-gray-600">
+                    <div className="flex items-center">
+                      <span className="mr-1">👍</span>
+                      <span>24 For</span>
+                    </div>
+                    <div className="flex items-center justify-end">
+                      <span className="mr-1">👎</span>
+                      <span>12 Against</span>
+                    </div>
+                  </div>
+                </Link>
+              );
+            })}
           </div>
+
+          {projects.length === 0 && (
+            <div className="text-center py-12">
+              <h3 className="text-xl text-gray-600">
+                No active projects found. Be the first to submit one!
+              </h3>
+            </div>
+          )}
         </div>
       </div>
     </AuthGuard>

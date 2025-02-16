@@ -2,10 +2,8 @@ import { ethers } from "ethers";
 import WildlifeDAOABI from "./WildlifeDAOABI.json";
 
 // Update these addresses with the newly deployed contracts
-export const WILDLIFE_DAO_ADDRESS =
-  "0x30499FC4Bc807942498f6b6660486Ee9233d06B0";
-export const WILDLIFE_TOKEN_ADDRESS =
-  "0x0091524C5C7DBA5b1b418390E23c468D2d99b54D";
+export const WILDLIFE_DAO_ADDRESS = "0x16Dfe023736A3ed2E0B21e466e6AeDc5cE09Fe29";
+export const WILDLIFE_TOKEN_ADDRESS = "0x6E54fbCaaeb8410e34d238b797aFFC250959987A";
 
 export const WILDLIFE_DAO_ABI = [
   {
@@ -106,6 +104,68 @@ export const WILDLIFE_DAO_ABI = [
     stateMutability: "payable",
     type: "function",
   },
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: true,
+        internalType: "uint256",
+        name: "projectId",
+        type: "uint256",
+      },
+      {
+        indexed: true,
+        internalType: "address",
+        name: "submitter",
+        type: "address",
+      },
+      {
+        indexed: false,
+        internalType: "string",
+        name: "title",
+        type: "string",
+      },
+      {
+        indexed: false,
+        internalType: "uint256",
+        name: "fundingRequired",
+        type: "uint256",
+      },
+      {
+        indexed: false,
+        internalType: "enum WildlifeDAO.ProjectStatus",
+        name: "status",
+        type: "uint8"
+      }
+    ],
+    name: "ProposalSubmitted",
+    type: "event"
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: true,
+        internalType: "uint256",
+        name: "projectId",
+        type: "uint256"
+      },
+      {
+        indexed: false,
+        internalType: "enum WildlifeDAO.ProjectStatus",
+        name: "oldStatus",
+        type: "uint8"
+      },
+      {
+        indexed: false,
+        internalType: "enum WildlifeDAO.ProjectStatus",
+        name: "newStatus",
+        type: "uint8"
+      }
+    ],
+    name: "ProjectStatusChanged",
+    type: "event"
+  }
 ];
 
 export const PROPOSAL_ABI = [
