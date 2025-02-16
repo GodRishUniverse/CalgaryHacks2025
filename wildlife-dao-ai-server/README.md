@@ -2,7 +2,7 @@
 
 ## **🚀 Elevator Pitch**
 
-**WildlifeDAO** is a decentralized governance platform that empowers donors to directly influence  **wildlife conservation funding** . By leveraging  **blockchain transparency, quadratic voting, and decentralized decision-making** , WildlifeDAO ensures that every donor’s voice is heard while preventing governance manipulation by large token holders.
+**WildlifeDAO** is a decentralized governance platform that empowers donors to directly influence **wildlife conservation funding**. By leveraging **blockchain transparency via decentralized decision-making and AI-driven analysis**, WildlifeDAO ensures that every donor’s voice is heard while preventing governance manipulation by large token holders.
 
 ---
 
@@ -21,11 +21,9 @@
 
 ## **📖 Project Overview**
 
-WildlifeDAO is a **blockchain-powered donation platform** that allows users to contribute to **wildlife conservation efforts** while gaining  **voting power in funding decisions** .
+WildlifeDAO is a **blockchain-powered donation platform** that allows users to contribute to **wildlife conservation efforts** while gaining **voting power in funding decisions** .
 
 ✔ **Users donate using "imaginary" USD** and receive  **WLD governance tokens** .
-
-✔ **Quadratic voting prevents governance manipulation** by wealthy stakeholders.
 
 ✔ **Smart contracts ensure transparency** in fund allocation.
 
@@ -36,8 +34,6 @@ WildlifeDAO is a **blockchain-powered donation platform** that allows users to c
 ### **📌 Key Features**
 
 ✅ **Decentralized Fund Governance** – Donors vote on which projects receive funding.
-
-✅ **Quadratic Voting System** – Prevents whale manipulation.
 
 ✅ **Smart Contracts on Ethereum** – All transactions are transparent & secure.
 
@@ -80,9 +76,6 @@ WildlifeDAO aligns with the hackathon's theme by:
 ## **🔗 Try It Out!**
 
 * **GitHub Repo:** [🔗 WildlifeDAO GitHub](https://github.com/GodRishUniverse/WildlifeDAO)
-* **Live Demo:** [🔗 WildlifeDAO Web App](https://your-live-demo-url.com/) *(Replace if applicable)*
-
----
 
 ## **👥 Team Members**
 
