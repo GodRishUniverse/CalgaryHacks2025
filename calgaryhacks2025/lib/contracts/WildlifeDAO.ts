@@ -1,23 +1,82 @@
 import { ethers } from 'ethers';
+import WildlifeDAOABI from './WildlifeDAOABI.json';
 
-export const WILDLIFE_DAO_ADDRESS = "0x6a347e814f5D76c42fDf05D4A3413A7D8AFd96c3";
-export const WILDLIFE_TOKEN_ADDRESS = "0x1E9861Dfa9D6A345Af913221B41cE61b761820A7";
+// Update these addresses with the newly deployed contracts
+export const WILDLIFE_DAO_ADDRESS = "0x30499FC4Bc807942498f6b6660486Ee9233d06B0";
+export const WILDLIFE_TOKEN_ADDRESS = "0x0091524C5C7DBA5b1b418390E23c468D2d99b54D";
 
 export const WILDLIFE_DAO_ABI = [
-  "function donate(uint256 _usdAmount, address _recipient) external payable",
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_usdAmount",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "_recipient",
+        "type": "address"
+      }
+    ],
+    "name": "donate",
+    "outputs": [],
+    "stateMutability": "payable",
+    "type": "function"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "donor",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "usdAmount",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "wldMinted",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "daoFeeAmount",
+        "type": "uint256"
+      }
+    ],
+    "name": "DonationReceived",
+    "type": "event"
+  },
   "function submitProject(string memory title, string memory description, uint256 fundingRequired) external",
   "function validateProject(uint256 projectId) external",
   "function voteOnProject(uint256 projectId, bool support) external",
   "function addValidator(address validator) external",
-  "event DonationReceived(address indexed donor, uint256 usdAmount, uint256 wldMinted, uint256 daoFeeAmount)",
+  "function wldToken() external view returns (address)",
+  "function totalValueLocked() external view returns (uint256)",
+  "function totalWLD() external view returns (uint256)",
+  "function exchangeRate() external view returns (uint256)",
+  "function getProjectVotes(uint256 projectId) external view returns (uint256 forVotes, uint256 againstVotes, uint256 votingEndTime)",
+  "function hasVoted(uint256 projectId, address voter) external view returns (bool)",
   "event ProjectSubmitted(uint256 indexed projectId, address indexed proposer, string title, uint256 fundingRequired)",
   "event ProjectValidated(uint256 indexed projectId, address indexed validator, uint256 currentValidations)",
-  "event ProjectStatusUpdated(uint256 indexed projectId, ProjectStatus newStatus)",
-  "function totalValueLocked() view returns (uint256)",
-  "function totalWLD() view returns (uint256)",
-  "function exchangeRate() view returns (uint256)"
+  "event ProjectStatusUpdated(uint256 indexed projectId, uint8 newStatus)",
+  "event VoteCast(uint256 indexed projectId, address indexed voter, bool support, uint256 votingPower)",
+  "event ProjectStatusChanged(uint256 indexed projectId, uint8 oldStatus, uint8 newStatus)",
+  "function projects(uint256) external view returns (string title, string description, address proposer, uint256 fundingRequired, uint256 validationCount, uint8 status, uint256 votingStartTime, uint256 votingEndTime, bool executed)"
 ];
 
 export const getWildlifeDAOContract = async (signer: ethers.Signer) => {
-  return new ethers.Contract(WILDLIFE_DAO_ADDRESS, WILDLIFE_DAO_ABI, signer);
+  return new ethers.Contract(
+    WILDLIFE_DAO_ADDRESS,
+    WILDLIFE_DAO_ABI,
+    signer
+  );
 }; 

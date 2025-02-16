@@ -5,6 +5,13 @@ import Image from "next/image";
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "next/navigation";
+import { ethers } from "ethers";
+import { getWildlifeDAOContract } from "@/lib/contracts/WildlifeDAO";
+import { getWLDTokenContract } from "@/lib/contracts/WildlifeDAOToken";
+import {
+  WILDLIFE_DAO_ADDRESS,
+  WILDLIFE_TOKEN_ADDRESS,
+} from "@/lib/contracts/WildlifeDAO";
 
 const TOP_PROJECTS = [
   {
@@ -95,6 +102,41 @@ export default function Home() {
       router.push("/donate");
     } else {
       router.push("/login?redirect=/donate");
+    }
+  };
+
+  const handleDonate = async (amount: number) => {
+    try {
+      if (!window.ethereum) {
+        alert("Please install MetaMask!");
+        return;
+      }
+
+      const provider = new ethers.BrowserProvider(window.ethereum);
+      const signer = await provider.getSigner();
+      const daoContract = await getWildlifeDAOContract(signer);
+
+      console.log("Starting donation...");
+      console.log("Amount:", amount);
+      console.log("Recipient:", await signer.getAddress());
+
+      // Convert amount to wei (assuming amount is in whole units)
+      const amountInWei = ethers.parseUnits(amount.toString(), 0); // Changed to 0 decimals since we're using whole USD amounts
+
+      const tx = await daoContract.donate(
+        amount, // Use raw amount since contract expects USD amount
+        await signer.getAddress(),
+        { gasLimit: 300000 }
+      );
+
+      console.log("Transaction sent:", tx.hash);
+      const receipt = await tx.wait();
+      console.log("Transaction confirmed:", receipt);
+
+      alert("Donation successful!");
+    } catch (error: any) {
+      console.error("Donation error:", error);
+      alert(`Donation failed: ${error.message}`);
     }
   };
 
@@ -306,22 +348,62 @@ export default function Home() {
 
       {/* New CTA Section */}
       <div className="container mx-auto px-6 py-16 text-center">
-        <div className="max-w-3xl mx-auto">
-          <h2 className="text-3xl font-bold mb-6 text-gray-800">
+        <div className="text-center max-w-3xl mx-auto px-4">
+          <h1 className="text-4xl font-bold text-gray-900 mb-6">
             Ready to Make a Difference?
-          </h2>
+          </h1>
+
           <p className="text-xl text-gray-600 mb-8">
-            Join our community of conservation-minded donors and help shape the
-            future of wildlife preservation.
+            Join our community of conservation innovators. Submit your wildlife
+            preservation project or contribute to existing initiatives.
           </p>
-          <Link
-            href="/login"
-            className="inline-block px-12 py-4 bg-gradient-to-r from-pink-500 to-rose-400 
-                     text-white rounded-full font-bold text-lg hover:from-pink-600 
-                     hover:to-rose-500 transform hover:scale-105 transition-all shadow-lg"
-          >
-            Start Contributing
-          </Link>
+
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Link
+              href="/projects/submit"
+              className="inline-flex items-center justify-center px-8 py-4 text-lg font-semibold 
+              bg-gradient-to-r from-pink-500 to-pink-600 text-white rounded-xl 
+              shadow-lg hover:scale-105 transition-all duration-200"
+            >
+              Submit a Project 🌿
+            </Link>
+
+            <Link
+              href="/projects"
+              className="inline-flex items-center justify-center px-8 py-4 text-lg font-semibold 
+              bg-white text-pink-600 border-2 border-pink-500 rounded-xl 
+              shadow-md hover:scale-105 transition-all duration-200"
+            >
+              View Projects 🔍
+            </Link>
+          </div>
+
+          <div className="mt-12 grid md:grid-cols-3 gap-8">
+            <div className="p-6 bg-white rounded-xl shadow-md">
+              <div className="text-3xl mb-2">🌍</div>
+              <h3 className="text-lg font-semibold mb-2">Submit Your Vision</h3>
+              <p className="text-gray-600">
+                Propose your wildlife conservation project and get community
+                support
+              </p>
+            </div>
+
+            <div className="p-6 bg-white rounded-xl shadow-md">
+              <div className="text-3xl mb-2">⚡</div>
+              <h3 className="text-lg font-semibold mb-2">Get Validated</h3>
+              <p className="text-gray-600">
+                Projects are reviewed by our expert validators for feasibility
+              </p>
+            </div>
+
+            <div className="p-6 bg-white rounded-xl shadow-md">
+              <div className="text-3xl mb-2">🚀</div>
+              <h3 className="text-lg font-semibold mb-2">Receive Funding</h3>
+              <p className="text-gray-600">
+                Approved projects get funded through community voting
+              </p>
+            </div>
+          </div>
         </div>
       </div>
     </main>
