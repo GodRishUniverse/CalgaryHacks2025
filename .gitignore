@@ -1,6 +1,0 @@
-.venv
-.env
-Pipfile
-Pipfile.lock
-test.py
-request.rest
