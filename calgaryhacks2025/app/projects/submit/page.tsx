@@ -6,6 +6,7 @@ import { getWildlifeDAOContract } from "@/lib/contracts/WildlifeDAO";
 import { useRouter } from "next/navigation";
 import AuthGuard from "@/components/AuthGuard";
 import { supabase } from "@/lib/supabase";
+import { createAIAnalysisString } from '@/lib/utils/projectUtils';
 
 interface BudgetItem {
   item: string;
@@ -71,6 +72,7 @@ export default function SubmitProjectPage() {
     },
   ]);
   const [submitting, setSubmitting] = useState(false);
+  const [isAiScoring, setIsAiScoring] = useState(false);
   const router = useRouter();
 
   const addBudgetItem = () => {
@@ -118,6 +120,32 @@ export default function SubmitProjectPage() {
     setMilestones(newMilestones);
   };
 
+  const getAIScore = async (analysisText: string) => {
+    setIsAiScoring(true);
+    try {
+      console.log("Sending AI scoring request:", analysisText);
+      const response = await fetch('/api/ai-score', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'text/plain'
+        },
+        body: analysisText
+      });
+      console.log("AI scoring response:", response);
+
+      if (!response.ok) {
+        throw new Error('AI scoring failed');
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Error getting AI score:', error);
+      return null;
+    } finally {
+      setIsAiScoring(false);
+    }
+  };
+
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     try {
@@ -161,7 +189,24 @@ export default function SubmitProjectPage() {
       const onchainProjectId = parseInt(log.topics[1], 16);
       console.log("Received onchain project ID:", onchainProjectId);
 
-      // Now save to Supabase with the onchain project ID
+      // Create and send the analysis string to AI
+      const analysisString = createAIAnalysisString({
+        title,
+        description,
+        funding_required: Number(fundingRequired),
+        location,
+        timeline,
+        technical_requirements: technicalRequirements,
+        impact_metrics: impactMetrics,
+        team_background: teamBackground,
+        budget_breakdown: budgetItems,
+        milestones
+      });
+
+      const aiScoreData = await getAIScore(analysisString);
+      console.log("AI Score Data:", aiScoreData);
+
+      // Now save to Supabase with the AI scores
       const { data, error } = await supabase.from("projects").insert([
         {
           user_id: user.id,
@@ -179,7 +224,9 @@ export default function SubmitProjectPage() {
           budget_breakdown: budgetItems,
           milestones: milestones,
           created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
+          updated_at: new Date().toISOString(),
+          ai_score: aiScoreData?.final_score || null,
+          ai_score_breakdown: aiScoreData?.score_breakdown || null
         }
       ]);
 
@@ -416,12 +463,22 @@ export default function SubmitProjectPage() {
 
               <button
                 type="submit"
-                disabled={submitting}
-                className={`w-full py-4 px-6 bg-gradient-to-r from-pink-500 to-rose-400 
-                text-white rounded-lg font-semibold transition-all transform hover:scale-105
-                ${submitting ? "opacity-50 cursor-not-allowed" : "hover:from-pink-600 hover:to-rose-500"}`}
+                disabled={isAiScoring}
+                className="w-full px-6 py-3 bg-gradient-to-r from-pink-500 to-rose-400 
+                  text-white rounded-lg font-semibold transition-all hover:scale-105 
+                  disabled:opacity-50 disabled:cursor-not-allowed flex justify-center items-center"
               >
-                {submitting ? "Submitting..." : "Submit Project"}
+                {isAiScoring ? (
+                  <>
+                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Getting AI Score...
+                  </>
+                ) : (
+                  "Submit Project"
+                )}
               </button>
             </form>
           </div>

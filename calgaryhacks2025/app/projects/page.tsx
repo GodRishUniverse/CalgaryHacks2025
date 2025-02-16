@@ -23,6 +23,7 @@ interface Project {
   votingEnds: Date;
   votingStartTime: number;
   votingEndTime: number;
+  ai_score?: number;
 }
 
 // Helper function for formatting time
@@ -467,7 +468,9 @@ export default function ProjectsPage() {
                       <div className="flex justify-between text-sm text-gray-600">
                         <div>Funding Required: ${project.funding_required.toLocaleString()}</div>
                         <div className="flex items-center">
-                          <span className="text-purple-600 font-medium">AI Score: 87%</span>
+                          <span className="text-purple-600 font-medium">
+                            AI Score: {project.ai_score ? `${project.ai_score}%` : 'Pending'}
+                          </span>
                           <span className="ml-2 text-gray-400 text-xs">🤖</span>
                         </div>
                       </div>
