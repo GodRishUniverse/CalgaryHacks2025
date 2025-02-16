@@ -12,7 +12,7 @@ load_dotenv()
 
 MAX_SEARCH_RESULTS = 3
 
-KEYWORD_TEMPLATE = """Identify 5-7 specific keywords or topics from this wildlife conservation project text and only the project text that would help find relevant scientific papers or conservation reports.
+KEYWORD_TEMPLATE = """Identify 30-50 specific keywords or topics from this wildlife conservation project text and only the project text that would help find relevant scientific papers or conservation reports.
 Focus on:
 - Species names
 - Conservation techniques
@@ -20,7 +20,7 @@ Focus on:
 - Ecological challenges
 
 Return ONLY a comma-separated list, no commentary.
-When you have insufficient information, enter 'insufficient'. Generally when there is insufficient information, it will not be descriptive (like only a few sentences is insufficient). Make sure to analyze it using the content and the context.
+When you have insufficient information, enter 'insufficient'. Generally when there is insufficient information, it will not be descriptive (like only a few sentences is insufficient - keyword count will be higher than actual project proposal). Make sure to analyze it using the content and the context.
 
 
 A sample project format is as follows:
@@ -32,7 +32,7 @@ Methodology:
 Budget:
 Evaluation:
 
-This is the Project Text to evaluate:
+This is the Project Proposal to evaluate:
 {project_text}
 
 {format_instructions}"""
