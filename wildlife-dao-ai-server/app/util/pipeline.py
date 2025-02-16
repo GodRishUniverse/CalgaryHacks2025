@@ -20,9 +20,19 @@ Focus on:
 - Ecological challenges
 
 Return ONLY a comma-separated list, no commentary.
-When you have insufficient information, enter 'insufficient'. Generally when there is insufficient information, it will not be descriptive. Make sure to analyze it using the content and the context.
+When you have insufficient information, enter 'insufficient'. Generally when there is insufficient information, it will not be descriptive (like only a few sentences is insufficient). Make sure to analyze it using the content and the context.
 
-Project Text:
+
+A sample project format is as follows:
+
+Project Title:
+Executive Summary:
+Problem Statement
+Methodology:
+Budget:
+Evaluation:
+
+This is the Project Text to evaluate:
 {project_text}
 
 {format_instructions}"""
