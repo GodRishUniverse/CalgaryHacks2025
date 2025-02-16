@@ -4,3 +4,4 @@ Pipfile
 Pipfile.lock
 test.py
 request.rest
+__pycache__/
