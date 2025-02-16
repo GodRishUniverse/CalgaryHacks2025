@@ -1,4 +1,6 @@
 import json
+import os
+from pathlib import Path
 from langchain.schema import StrOutputParser
 from langchain.prompts import PromptTemplate
 from langchain.schema.runnable import RunnableSequence
@@ -9,17 +11,13 @@ from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_chroma import Chroma
 from app.util.web_scrape import format_search_query
 from dotenv import load_dotenv
-
-import openai 
-from langchain.embeddings.openai import OpenAIEmbeddings
-
-import os
+from langchain_openai import OpenAIEmbeddings
 
 # pip install langchain-community chromadb
 
 load_dotenv()
 
-VECTOR_DB_DIR = "chroma_db" # Vector DB settings
+VECTOR_DB_DIR = Path("./chroma_db").resolve()  # Vector DB settings
 
 MAX_SEARCH_RESULTS = 3
 
@@ -91,6 +89,7 @@ keyword_chain = RunnableSequence(
 # Setup for vector database
 embeddings = OpenAIEmbeddings()
 
+
 # Initialize or load the vector database
 def get_vectorstore():
     if os.path.exists(VECTOR_DB_DIR):
@@ -101,14 +100,16 @@ def get_vectorstore():
         db.persist()
         return db
 
+
 # Function to add new documents to the vector database
 def add_to_vectorstore(texts, metadatas=None):
     text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
     docs = text_splitter.create_documents(texts, metadatas)
-    
+
     db = get_vectorstore()
     db.add_documents(docs)
     db.persist()
+
 
 search = GoogleSearchAPIWrapper()
 
@@ -135,6 +136,7 @@ def query_vectorstore(query, n_results=3):
     docs = db.similarity_search(query, k=n_results)
     return [doc.page_content for doc in docs]
 
+
 # Fallback to web search if vector DB doesn't have enough relevant info
 def search_conservation_data(keywords):
     query = f"wildlife conservation recent data {', '.join(keywords)}"
@@ -157,16 +159,16 @@ def full_pipeline(project_text):
     # First try to get results from vector database
     db_query = f"wildlife conservation {', '.join(keywords)}"
     db_results = query_vectorstore(db_query)
-    
+
     # If not enough results from DB, fall back to web search
     if len(db_results) < 2:
         search_results = search_conservation_data(keywords)
         formatted_results = format_search_query(search_results)
-        
+
         # Add these web results to our vector database for future use
         if formatted_results:
             add_to_vectorstore([formatted_results])
-            
+
         db_results = formatted_results
     else:
         db_results = "\n\n".join(db_results)
