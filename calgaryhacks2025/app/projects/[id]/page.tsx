@@ -204,13 +204,15 @@ export default function ProjectDetailPage({
     try {
       if (!window.ethereum) return null;
 
-      const provider = new ethers.BrowserProvider(window.ethereum as ethers.Eip1193Provider);
+      const provider = new ethers.BrowserProvider(
+        window.ethereum as ethers.Eip1193Provider
+      );
       const signer = await provider.getSigner();
       const daoContract = await getWildlifeDAOContract(signer);
 
       const state = await daoContract.getProjectState(BigInt(projectId));
       console.log("Project state from contract:", state);
-      
+
       return {
         forVotes: Number(state[3]),
         againstVotes: Number(state[4]),
@@ -254,20 +256,29 @@ export default function ProjectDetailPage({
         return;
       }
 
-      const provider = new ethers.BrowserProvider(window.ethereum as ethers.Eip1193Provider);
+      const provider = new ethers.BrowserProvider(
+        window.ethereum as ethers.Eip1193Provider
+      );
       const signer = await provider.getSigner();
       const daoContract = await getWildlifeDAOContract(signer);
 
-      const tx = await daoContract.voteOnProject(BigInt(project.onchain_id), support);
+      const tx = await daoContract.voteOnProject(
+        BigInt(project.onchain_id),
+        support
+      );
       await tx.wait();
 
       const votes = await fetchProjectVotes(project.onchain_id);
       if (votes) {
-        setProject(prev => prev ? {
-          ...prev,
-          forVotes: votes.forVotes,
-          againstVotes: votes.againstVotes
-        } : null);
+        setProject((prev) =>
+          prev
+            ? {
+                ...prev,
+                forVotes: votes.forVotes,
+                againstVotes: votes.againstVotes,
+              }
+            : null
+        );
       }
 
       alert(`Successfully voted ${support ? "for" : "against"} the project!`);
@@ -304,7 +315,9 @@ export default function ProjectDetailPage({
           {/* Header Section */}
           <div className="bg-white rounded-xl shadow-md border border-gray-200 p-8 mb-8">
             <div className="flex justify-between items-start mb-6">
-              <h1 className="text-3xl font-bold text-gray-900">{project.title}</h1>
+              <h1 className="text-3xl font-bold text-gray-900">
+                {project.title}
+              </h1>
               <div className="flex gap-3">
                 <span className="px-4 py-2 bg-blue-100 text-blue-800 rounded-full text-sm font-medium">
                   {project.status}
@@ -333,26 +346,40 @@ export default function ProjectDetailPage({
             <div className="space-y-8">
               {/* Project Details */}
               <div className="bg-white rounded-xl shadow-md border border-gray-200 p-6">
-                <h2 className="text-xl font-semibold text-gray-800 mb-4">Project Details</h2>
+                <h2 className="text-xl font-semibold text-gray-800 mb-4">
+                  Project Details
+                </h2>
                 <div className="space-y-4">
                   <div>
-                    <h3 className="text-sm font-medium text-gray-500">Location</h3>
+                    <h3 className="text-sm font-medium text-gray-500">
+                      Location
+                    </h3>
                     <p className="text-gray-800">{project.location}</p>
                   </div>
                   <div>
-                    <h3 className="text-sm font-medium text-gray-500">Timeline</h3>
+                    <h3 className="text-sm font-medium text-gray-500">
+                      Timeline
+                    </h3>
                     <p className="text-gray-800">{project.timeline}</p>
                   </div>
                   <div>
-                    <h3 className="text-sm font-medium text-gray-500">Technical Requirements</h3>
-                    <p className="text-gray-800">{project.technical_requirements}</p>
+                    <h3 className="text-sm font-medium text-gray-500">
+                      Technical Requirements
+                    </h3>
+                    <p className="text-gray-800">
+                      {project.technical_requirements}
+                    </p>
                   </div>
                   <div>
-                    <h3 className="text-sm font-medium text-gray-500">Impact Metrics</h3>
+                    <h3 className="text-sm font-medium text-gray-500">
+                      Impact Metrics
+                    </h3>
                     <p className="text-gray-800">{project.impact_metrics}</p>
                   </div>
                   <div>
-                    <h3 className="text-sm font-medium text-gray-500">Team Background</h3>
+                    <h3 className="text-sm font-medium text-gray-500">
+                      Team Background
+                    </h3>
                     <p className="text-gray-800">{project.team_background}</p>
                   </div>
                 </div>
@@ -360,12 +387,19 @@ export default function ProjectDetailPage({
 
               {/* Budget Breakdown */}
               <div className="bg-white rounded-xl shadow-md border border-gray-200 p-6">
-                <h2 className="text-xl font-semibold text-gray-800 mb-4">Budget Breakdown</h2>
+                <h2 className="text-xl font-semibold text-gray-800 mb-4">
+                  Budget Breakdown
+                </h2>
                 <div className="space-y-3">
                   {project.budget_breakdown.map((item, index) => (
-                    <div key={index} className="flex justify-between items-center">
+                    <div
+                      key={index}
+                      className="flex justify-between items-center"
+                    >
                       <span className="text-gray-600">{item.item}</span>
-                      <span className="font-medium">${item.amount.toLocaleString()}</span>
+                      <span className="font-medium">
+                        ${item.amount.toLocaleString()}
+                      </span>
                     </div>
                   ))}
                   <div className="border-t pt-3 mt-3">
@@ -384,31 +418,52 @@ export default function ProjectDetailPage({
             <div className="space-y-8">
               {/* Voting Status */}
               <div className="bg-white rounded-xl shadow-md border border-gray-200 p-6">
-                <h2 className="text-xl font-semibold text-gray-800 mb-4">Voting Status</h2>
+                <h2 className="text-xl font-semibold text-gray-800 mb-4">
+                  Voting Status
+                </h2>
                 <div className="space-y-4">
                   <div className="relative h-4 bg-gray-100 rounded-full overflow-hidden">
                     <div
                       className="absolute left-0 h-full bg-green-500"
-                      style={{ 
-                        width: `${project.forVotes ? (project.forVotes * 100) / (project.forVotes + project.againstVotes || 1) : 0}%` 
+                      style={{
+                        width: `${project.forVotes ? (project.forVotes * 100) / (project.forVotes + project.againstVotes || 1) : 0}%`,
                       }}
                     />
                     <div
                       className="absolute right-0 h-full bg-red-500"
-                      style={{ 
-                        width: `${project.againstVotes ? (project.againstVotes * 100) / (project.forVotes + project.againstVotes || 1) : 0}%` 
+                      style={{
+                        width: `${project.againstVotes ? (project.againstVotes * 100) / (project.forVotes + project.againstVotes || 1) : 0}%`,
                       }}
                     />
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-green-600 font-medium">
-                      Support: {project.forVotes ? ((project.forVotes * 100) / (project.forVotes + project.againstVotes || 1)).toFixed(1) : '0'}%
+                      Support:{" "}
+                      {project.forVotes
+                        ? (
+                            (project.forVotes * 100) /
+                            (project.forVotes + project.againstVotes || 1)
+                          ).toFixed(1)
+                        : "0"}
+                      %
                     </span>
                     <span className="text-gray-600">
-                      Participation: {((project.forVotes + project.againstVotes) * 100 / 10000).toFixed(1)}%
+                      Participation:{" "}
+                      {(
+                        ((project.forVotes + project.againstVotes) * 100) /
+                        10000
+                      ).toFixed(1)}
+                      %
                     </span>
                     <span className="text-red-600 font-medium">
-                      Against: {project.againstVotes ? ((project.againstVotes * 100) / (project.forVotes + project.againstVotes || 1)).toFixed(1) : '0'}%
+                      Against:{" "}
+                      {project.againstVotes
+                        ? (
+                            (project.againstVotes * 100) /
+                            (project.forVotes + project.againstVotes || 1)
+                          ).toFixed(1)
+                        : "0"}
+                      %
                     </span>
                   </div>
                   <div className="flex justify-between gap-4 mt-4">
@@ -430,36 +485,61 @@ export default function ProjectDetailPage({
 
               {/* AI Score Breakdown */}
               <div className="bg-white rounded-xl shadow-md border border-gray-200 p-6">
-                <h2 className="text-xl font-semibold text-gray-800 mb-4">AI Analysis Breakdown</h2>
+                <h2 className="text-xl font-semibold text-gray-800 mb-4">
+                  AI Analysis Breakdown
+                </h2>
                 <div className="space-y-4">
-                  {project.ai_score_breakdown && Object.entries(project.ai_score_breakdown).map(([key, value]) => (
-                    <div key={key}>
-                      <div className="flex justify-between mb-1">
-                        <span className="text-sm font-medium text-gray-600">
-                          {key.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
-                        </span>
-                        <span className="text-sm font-medium text-purple-600">{value}%</span>
-                      </div>
-                      <div className="h-2 bg-gray-100 rounded-full">
-                        <div
-                          className="h-full bg-purple-500 rounded-full"
-                          style={{ width: `${value}%` }}
-                        />
-                      </div>
-                    </div>
-                  ))}
+                  {project.ai_score_breakdown &&
+                    Object.entries(project.ai_score_breakdown).map(
+                      ([key, value]) => (
+                        <div key={key}>
+                          <div className="flex justify-between mb-1">
+                            <span className="text-sm font-medium text-gray-600">
+                              {key
+                                .split("_")
+                                .map(
+                                  (word) =>
+                                    word.charAt(0).toUpperCase() + word.slice(1)
+                                )
+                                .join(" ")}
+                            </span>
+                            <span className="text-sm font-medium text-purple-600">
+                              {value}%
+                            </span>
+                          </div>
+                          <div className="h-2 bg-gray-100 rounded-full">
+                            <div
+                              className="h-full bg-purple-500 rounded-full"
+                              style={{ width: `${value}%` }}
+                            />
+                          </div>
+                        </div>
+                      )
+                    )}
                 </div>
               </div>
 
               {/* Milestones */}
               <div className="bg-white rounded-xl shadow-md border border-gray-200 p-6">
-                <h2 className="text-xl font-semibold text-gray-800 mb-4">Project Milestones</h2>
+                <h2 className="text-xl font-semibold text-gray-800 mb-4">
+                  Project Milestones
+                </h2>
                 <div className="space-y-4">
                   {project.milestones.map((milestone, index) => (
-                    <div key={index} className="border-l-2 border-pink-500 pl-4 pb-4">
-                      <div className="font-medium text-gray-800">{milestone.title}</div>
-                      <div className="text-sm text-gray-600 mb-1">{milestone.description}</div>
-                      <div className="text-sm text-pink-500">Deadline: {new Date(milestone.deadline).toLocaleDateString()}</div>
+                    <div
+                      key={index}
+                      className="border-l-2 border-pink-500 pl-4 pb-4"
+                    >
+                      <div className="font-medium text-gray-800">
+                        {milestone.title}
+                      </div>
+                      <div className="text-sm text-gray-600 mb-1">
+                        {milestone.description}
+                      </div>
+                      <div className="text-sm text-pink-500">
+                        Deadline:{" "}
+                        {new Date(milestone.deadline).toLocaleDateString()}
+                      </div>
                     </div>
                   ))}
                 </div>

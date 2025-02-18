@@ -12,8 +12,8 @@ import { getVotingContract } from "@/lib/contracts/VotingABI";
 import { WILDLIFE_DAO_ABI } from "@/lib/contracts/WildlifeDAO";
 
 interface Project {
-  id: number;          // Supabase ID
-  onchain_id: number;  // Smart contract project ID
+  id: number; // Supabase ID
+  onchain_id: number; // Smart contract project ID
   title: string;
   description: string;
   funding_required: number;
@@ -107,12 +107,12 @@ const fetchProjectVotes = async (project: Project) => {
     // Get voting data from the contract
     const state = await daoContract.getProjectState(BigInt(project.onchain_id));
     console.log("Project state from contract:", state);
-    
+
     return {
       forVotes: Number(state[3]), // forVotes is the 4th return value
       againstVotes: Number(state[4]), // againstVotes is the 5th return value
       votingStartTime: Number(state[1]), // votingStartTime is the 2nd return value
-      votingEndTime: Number(state[2]) // votingEndTime is the 3rd return value
+      votingEndTime: Number(state[2]), // votingEndTime is the 3rd return value
     };
   } catch (error) {
     console.error("Error fetching project votes:", error);
@@ -124,12 +124,14 @@ const fetchProjectVotes = async (project: Project) => {
 const getTimeLeft = (endTime: number): string => {
   const now = Date.now();
   const timeLeft = endTime - now;
-  
+
   // Always show at least 1 day remaining for demo purposes
   const daysLeft = Math.max(1, Math.floor(timeLeft / (1000 * 60 * 60 * 24)));
-  const hoursLeft = Math.floor((timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+  const hoursLeft = Math.floor(
+    (timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)
+  );
   const minutesLeft = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
-  
+
   return `${daysLeft}d ${hoursLeft}h ${minutesLeft}m`;
 };
 
@@ -259,11 +261,11 @@ export default function ProjectsPage() {
     const fetchProjects = async () => {
       try {
         console.log("Fetching projects from Supabase...");
-        
+
         const { data: dbProjects, error } = await supabase
           .from("projects")
           .select("*")
-          .order('created_at', { ascending: false });
+          .order("created_at", { ascending: false });
 
         if (error) {
           console.error("Error fetching projects:", error);
@@ -277,16 +279,16 @@ export default function ProjectsPage() {
           dbProjects.map(async (project) => {
             const votes = await fetchProjectVotes(project);
             const createdAt = new Date(project.created_at).getTime();
-            
+
             // Always set votingEndTime to 7 days from now for demo
-            const votingEndTime = Date.now() + (7 * 24 * 60 * 60 * 1000);
-            
+            const votingEndTime = Date.now() + 7 * 24 * 60 * 60 * 1000;
+
             return {
               ...project,
               forVotes: votes?.forVotes || 0,
               againstVotes: votes?.againstVotes || 0,
               votingStartTime: createdAt,
-              votingEndTime: votingEndTime // Always 7 days from now
+              votingEndTime: votingEndTime, // Always 7 days from now
             };
           })
         );
@@ -315,7 +317,7 @@ export default function ProjectsPage() {
         return;
       }
 
-      await window.ethereum.request({ method: 'eth_requestAccounts' });
+      await window.ethereum.request({ method: "eth_requestAccounts" });
       const provider = new ethers.BrowserProvider(
         window.ethereum as ethers.Eip1193Provider
       );
@@ -325,14 +327,14 @@ export default function ProjectsPage() {
       console.log("Sending vote transaction:", {
         projectId: BigInt(project.onchain_id).toString(),
         support: support,
-        contractAddress: daoContract.target
+        contractAddress: daoContract.target,
       });
 
       const tx = await daoContract.voteOnProject(
         BigInt(project.onchain_id),
         support,
         {
-          gasLimit: BigInt(500000)
+          gasLimit: BigInt(500000),
         }
       );
 
@@ -340,7 +342,7 @@ export default function ProjectsPage() {
         hash: tx.hash,
         data: tx.data,
         to: tx.to,
-        from: tx.from
+        from: tx.from,
       });
 
       const receipt = await tx.wait();
@@ -349,15 +351,15 @@ export default function ProjectsPage() {
       if (receipt && receipt.status === 1) {
         // Fetch updated votes for this project
         const updatedVotes = await fetchProjectVotes(project);
-        
+
         // Update the projects state with new voting data
-        setProjects(currentProjects => 
-          currentProjects.map(p => 
+        setProjects((currentProjects) =>
+          currentProjects.map((p) =>
             p.id === project.id
               ? {
                   ...p,
                   forVotes: updatedVotes?.forVotes || p.forVotes,
-                  againstVotes: updatedVotes?.againstVotes || p.againstVotes
+                  againstVotes: updatedVotes?.againstVotes || p.againstVotes,
                 }
               : p
           )
@@ -365,13 +367,13 @@ export default function ProjectsPage() {
 
         alert(`Successfully voted ${support ? "for" : "against"} the project!`);
       }
-
     } catch (error: any) {
       console.error("Voting failed:", error);
-      
+
       // Log the error details
       if (error.data) console.error("Error data:", error.data);
-      if (error.transaction) console.error("Transaction details:", error.transaction);
+      if (error.transaction)
+        console.error("Transaction details:", error.transaction);
       if (error.code) console.error("Error code:", error.code);
       if (error.reason) console.error("Error reason:", error.reason);
 
@@ -392,7 +394,7 @@ export default function ProjectsPage() {
       );
       const signer = await provider.getSigner();
       const daoContract = await getWildlifeDAOContract(signer);
-      
+
       const status = await daoContract.debugProjectStatus(BigInt(projectId));
       console.log("Project status:", {
         status: status[0], // ProjectStatus enum value
@@ -400,7 +402,7 @@ export default function ProjectsPage() {
         currentTime: new Date(Number(status[2]) * 1000),
         votingStartTime: new Date(Number(status[3]) * 1000),
         votingEndTime: new Date(Number(status[4]) * 1000),
-        canVoteNow: status[5]
+        canVoteNow: status[5],
       });
     } catch (error) {
       console.error("Error checking project status:", error);
@@ -466,10 +468,16 @@ export default function ProjectsPage() {
                     <div className="space-y-4">
                       {/* Funding Required and AI Score */}
                       <div className="flex justify-between text-sm text-gray-600">
-                        <div>Funding Required: ${project.funding_required.toLocaleString()}</div>
+                        <div>
+                          Funding Required: $
+                          {project.funding_required.toLocaleString()}
+                        </div>
                         <div className="flex items-center">
                           <span className="text-purple-600 font-medium">
-                            AI Score: {project.ai_score ? `${project.ai_score}%` : 'Pending'}
+                            AI Score:{" "}
+                            {project.ai_score
+                              ? `${project.ai_score}%`
+                              : "Pending"}
                           </span>
                           <span className="ml-2 text-gray-400 text-xs">🤖</span>
                         </div>
@@ -478,7 +486,9 @@ export default function ProjectsPage() {
                       {/* Voting Timer */}
                       <div className="bg-gray-50 rounded-lg p-3">
                         <div className="flex justify-between items-center">
-                          <span className="text-sm font-medium text-gray-600">Time Left</span>
+                          <span className="text-sm font-medium text-gray-600">
+                            Time Left
+                          </span>
                           <span className="text-sm font-bold text-blue-600">
                             {getTimeLeft(project.votingEndTime)}
                           </span>
@@ -500,13 +510,28 @@ export default function ProjectsPage() {
                       {/* Voting Stats */}
                       <div className="flex justify-between text-sm text-gray-600">
                         <span className="text-green-600 font-medium">
-                          Support: {((project.forVotes * 100) / (project.forVotes + project.againstVotes || 1)).toFixed(1)}%
+                          Support:{" "}
+                          {(
+                            (project.forVotes * 100) /
+                            (project.forVotes + project.againstVotes || 1)
+                          ).toFixed(1)}
+                          %
                         </span>
                         <span className="text-gray-600">
-                          Participation: {(((project.forVotes + project.againstVotes) * 100) / 10000).toFixed(1)}%
+                          Participation:{" "}
+                          {(
+                            ((project.forVotes + project.againstVotes) * 100) /
+                            10000
+                          ).toFixed(1)}
+                          %
                         </span>
                         <span className="text-red-600 font-medium">
-                          Against: {((project.againstVotes * 100) / (project.forVotes + project.againstVotes || 1)).toFixed(1)}%
+                          Against:{" "}
+                          {(
+                            (project.againstVotes * 100) /
+                            (project.forVotes + project.againstVotes || 1)
+                          ).toFixed(1)}
+                          %
                         </span>
                       </div>
 

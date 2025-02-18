@@ -205,15 +205,21 @@ export default function DashboardPage() {
                   Your Contributions
                 </h2>
                 <div className="space-y-4">
-                  <div className="text-3xl font-bold text-pink-500">$0</div>
-                  <p className="text-gray-600">No contributions yet</p>
+                  <div className="text-3xl font-bold text-pink-500">
+                    ${Number(tokenBalance).toLocaleString()}
+                  </div>
+                  <p className="text-gray-600">
+                    {Number(tokenBalance) > 0 
+                      ? "Total Contributions" 
+                      : "No contributions yet"}
+                  </p>
                   <button
-                    onClick={() => router.push("/donate")}
+                    onClick={() => router.push("/projects")}
                     className="px-4 py-2 bg-gradient-to-r from-pink-500 to-rose-400 
                     text-white rounded-lg font-semibold transition-all transform hover:scale-105 
                     hover:from-pink-600 hover:to-rose-500 text-sm"
                   >
-                    Make First Donation
+                    {Number(tokenBalance) > 0 ? "View Projects" : "Get Started"}
                   </button>
                 </div>
               </div>

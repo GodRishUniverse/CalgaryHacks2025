@@ -149,15 +149,19 @@ export default function SubmitProjectPage() {
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     try {
+      if (!window.ethereum) {
+        throw new Error("Please install MetaMask to use this feature");
+      }
+      
+      const provider = new ethers.BrowserProvider(window.ethereum);
+      const signer = await provider.getSigner();
+      const daoContract = await getWildlifeDAOContract(signer);
+
       // Get current user first
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
         throw new Error("Please login first");
       }
-
-      const provider = new ethers.BrowserProvider(window.ethereum as any);
-      const signer = await provider.getSigner();
-      const daoContract = await getWildlifeDAOContract(signer);
 
       // Generate a unique ID for the project
       const uniqueId = `PROJ-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;

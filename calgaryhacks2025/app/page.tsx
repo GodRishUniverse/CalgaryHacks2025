@@ -184,8 +184,8 @@ export default function Home() {
           <p className="text-xl text-gray-600 leading-relaxed mb-12">
             WildlifeDAO combines blockchain technology with democratic
             governance to create a transparent, efficient, and fair system for
-            funding conservation projects. Through quadratic voting, we ensure
-            that every donor's voice matters, regardless of contribution size.
+            funding conservation projects. Through direct voting, we ensure
+            that every donor's voice matters, proportional to their contribution.
           </p>
           <div className="grid md:grid-cols-4 gap-8">
             {STATISTICS.map((stat, index) => (
@@ -305,8 +305,8 @@ export default function Home() {
       <div className="container mx-auto px-6 py-16 bg-gray-50">
         <div className="grid md:grid-cols-3 gap-8">
           <FeatureCard
-            title="Quadratic Voting"
-            description="Fair governance through diminishing returns on voting power"
+            title="Direct Voting"
+            description="Fair governance through token-weighted voting power"
             icon="🗳️"
           />
           <FeatureCard
@@ -315,7 +315,7 @@ export default function Home() {
             icon="🔗"
           />
           <FeatureCard
-            title="Secure Auathentication"
+            title="Secure Authentication"
             description="MetaMask integration with one-wallet-per-user policy"
             icon="🔒"
           />
